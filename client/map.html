@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Risiko</title>
+    <link rel='icon' type='image/png' href='/client/img/mappa.jpg' />
+    <link rel='stylesheet' type='text/css' href='/dist/main.bundle.css' />
+  </head>
+
+  <body>
+    <div>
+      <table>
+        <tr>
+          <td>
+            <canvas id="map" width="1440" height="810" style="border:1px solid #000000;">
+            </canvas>
+          </td>
+          <td>
+            Nome giocatore:
+            <br>
+            Danny.
+            <br>
+            ciao
+          </td>
+          
+        </tr>
+    </table>
+    </div>
+  
+
+    <script>
+      var canvas = document.getElementById("map");
+      var context = canvas.getContext("2d");
+
+      var canvasCopy = document.createElement("canvas");
+      var copyContext = canvasCopy.getContext("2d");
+      var image = new Image();
+      image.src = "./img/mappa.jpg"; 
+
+      image.onload = function () {   
+        canvasCopy.width = image.width;
+        canvasCopy.height = image.height;
+        copyContext.drawImage(image, 0, 0);
+
+        canvas.width = 1440;
+        canvas.height = 810;
+        context.drawImage(canvasCopy, 0, 0, canvasCopy.width, canvasCopy.height, 0, 0, canvas.width, canvas.height);
+      }
+    </script>
+  </body>
+  
+  
+</html>
