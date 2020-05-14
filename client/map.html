@@ -15,7 +15,14 @@
             </canvas>
           </td>
           <td>
-            Nome giocatore:
+            <div id="chat-text" style="width:500px;height:100px;overflow-y:scroll">
+
+            </div>
+            <form id="chat-form">
+              <input id="chat-input" type="text" style="width:500px"></input>
+            </form>
+            <br>
+              Nome giocatore:
             <br>
             Danny.
             <br>
@@ -28,9 +35,12 @@
   
 
     <script>
-      var canvas = document.getElementById("map");
-      var context = canvas.getContext("2d");
+      var chatText = document.getElementById("chat-text");
+      var chatInput = document.getElementById("chat-input");
+      var chatForm = document.getElementById("chat-form");
 
+      var canvas = document.getElementById("map");
+      var context = canvas.getContext("2d");      
       var canvasCopy = document.createElement("canvas");
       var copyContext = canvasCopy.getContext("2d");
       var image = new Image();
@@ -45,6 +55,19 @@
         canvas.height = 810;
         context.drawImage(canvasCopy, 0, 0, canvasCopy.width, canvasCopy.height, 0, 0, canvas.width, canvas.height);
       }
+
+      var socket = io();
+
+      socket.on('addToChat', function(data) {
+        chatText.innerHTML += '<div>' + data + '</data>';
+      });
+      
+      chatForm.onSubmit = function (e) {
+        e.preventDefault();
+        sock.emit('sendMsgToService', chatInput.value);
+        chatInput.value = '';
+      };
+
     </script>
   </body>
   
