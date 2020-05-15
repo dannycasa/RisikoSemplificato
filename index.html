@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Versione semplificata di Risiko</title>
+    <link rel='icon' type='image/png' href='/client/img/mappa.jpg' />
+  </head>
+
+  <body oncontextmenu='return false;'>
+    <div id='name-prompt-overlay'>
+      <div id='name-prompt-container'>
+        <form id='nickname-form'>
+          <input type='text' id='name-input' placeholder='Nickname'
+            autocomplete='off' />
+            <button id='nick' form='nickaname-form'>
+              Inizia a giocare
+            </button>
+        </form>
+      </div>
+    </div>
+
+    <div id='container'>
+      <table>
+        <tr>
+          <th colspan='3'>
+            <h1>Risiko Semplificato</h1>
+          </th>
+        </tr>
+        <tr>
+          <td id='icons-container' colspan='3'>
+            <div>
+              <img src='./client/img/tank.png' />
+              <div>I tank: sono l'unità fondamentale del gioco.</div>
+            </div>
+            <br/>
+            <div>
+              <img src='./client/img/mappa.jpg' width="300" height="150"/>
+              <div>La mappa: in gioco ricoprirà quasi tutto lo schermo.</div>
+            </div>
+            <br/>
+            <div>
+              <h3> Mappa del gioco: </h3>
+              La mappa del gioco ha un totale di 42 stati divisi in 6 continenti:America Settentrionale e Meridionale, Europa, Africa, Asia e Oceania.
+              <ul>
+                <li>America Settentrionale: Groenlandia, Alaska, Territori del Nord-Ovest, Alberta, Ontario, Quebec, Stati Uniti Orientali e Occidentali, America Centrale;</li>
+                <li>America Meridionale: Argentina, Brasile, Perù, Venezuela;</li>
+                <li>Europa: Islanda, Gran Bretagna, Scandinavia, Europa Occidentale, Settentrionale e Meridionale, Ucraina;</li>
+                <li>Africa: Egitto, Congo, Madagascar, Africa del Nord, Orientale e del Sud;</li>
+                <li>Asia: Medio Oriente, Urali, Afganistan, India, Siam, Cina, Mongolia, Jacuzia, Čita, Kamchatka, Giappone;</li>
+                <li>Oceania: Nuova Guinea, Indonesia, Australia Orientale e Occidentale.</li>
+              </ul>
+
+              <h3> Obiettivo del gioco</h3>
+              L'obiettivo del gioco è conquistare gli stati degli altri giocatori.
+              I territori vengono divisi in parti uguali ad inizio partita.
+              Quindi:
+              <ul>
+                <li>In 2 giocatori: ognuno partirà con 21 territori.</li>
+                <li>In 3 giocatori: ognuno partirà con 14 territori.</li>
+                <li>In 4 giocatori: ognuno partirà con 10 territori e i restanti 2 territori verranno assegnati casualmente a 2 giocatori diversi.</li>
+              </ul> 
+              
+              <h3>Condizione di Vittoria</h3>
+              Tra i giocatori vince chi per primo riesce a conquistare un numero di territori pari a quelli che gli sono stati assegnati più 5.
+              Quindi vincerà il giocatore che per prima arriverà ad avere contemporaneamente:
+              <ul>
+                <li>In 2 giocatori: il giocatore che avrà 26 territori.</li>
+                <li>In 3 giocatori: il giocatore che avrà 19 territori.</li>
+                <li>In 4 giocatori: il giocatore che avrà 15 territori.</li>
+              </ul>
+              Questa è la principale differenza col gioco originale, in termini di regole, dove la condizione di vittoria cambia in base a quella che si riceve da un mazzo di carte.
+            
+              <h3>Bonus</h3>
+              Se un giocatore riuscirà a conquistare completamente un continente, ad ogni turno avrà un bonus di carri armati.
+              Tale bonus è così ripartito:
+              <ul>
+                <li>America del Nord: 5;</li>
+                <li>America del Sud: 2;</li>
+                <li>Asia: 7;</li>
+                <li>Europa: 5;</li>
+                <li>Africa: 3;</li>
+                <li>Oceania: 2.</li>
+              </ul>
+              <br>
+              Come verrà spiegato in seguito, ogni giocatore alla conquista di un nuovo territorio avrà diritto a pescare una carta che avrà uno stemma diverso.
+              Al raggiungimento di determinate combinazioni di stemmi, si può fare una dichiarazione di gioco e ottenere:
+              <ul>
+                <li>4 armate con tre cannoni;</li>
+                <li>6 armate con tre fanti;</li>
+                <li>8 armate con tre cavalieri;</li>
+                <li>10 armate con tre simboli diversi;</li>
+                <li>12 armate con un simbolo jolly e altri due simboli uguali.</li>
+              </ul>
+              Si può contare inoltre su altre due armate extra se tra le carte dichiarate ce n'è una corrispondente a un territorio già occupato.
+              <h3>Inizio del gioco</h3>
+              All'inizio della partita verranno distribuiti i territori ad ogni giocatore in base al criterio descritto nella sezione obiettivo del gioco.
+              Ad ogni giocatore verrà assegnato un colore diverso per poter vedere meglio quale giocatore sta occupando i territori.
+
+              Nella fase iniziale ogni giocatore si occuperà di distribuire un numero arbitrario di carri armati nei territori a lui assegnati.
+              Ogni stato deve avere assegnato almeno un carro armato, non c'è limite al numero di carri armati assegnati ad un dato stato.
+              Il numero di carri armati assegnati inizialmente varia in base al numero di giocatori nel seguente modo:
+              <ul>
+                <li>In 2 giocatori: ognuno avrà disponibili 40 carri armati.</li>
+                <li>In 3 giocatori: ognuno avrà disponibili 35 carri armati.</li>
+                <li>In 4 giocatori: ognuno avrà disponibili 30 carri armati.</li>
+              </ul>
+            Si comincia la partita stabilendo chi inizia con il lancio più alto del dado e proseguendo in senso antiorario.
+            Durante il primo turno per equità, ogni giocatore può soltanto aggiungere carri armati ai propri stati.
+            <br>
+            Una volta che il gioco è in corso, se come indicato nella sezione Bonus, si è in possesso di una delle configurazioni
+            di carte prevista si possono scambiare tali carte per avere armate bonus.
+
+            <h3> Svolgimento del gioco</h3>
+            Durante il proprio turno ogni giocatore può svolgere tre attività principali: 
+            <ul>
+              <li>rinforzare le proprie armate,</li>
+              <li>attaccare,</li>
+              <li>spostare.</li>
+            </ul>
+            Il rinforzo avviene all'inizio del proprio turno e consiste nell'incrementare il numero delle proprie armate aggiungendovi ulteriori carri armati risultanti.
+            Ogni inizio turno (compreso il primo turno) ad ogni giocatore viene assegnato un numero di carria armati pari al numero di territori già occupati diviso tre, 
+            arrotondato per difetto. Pertanto, se un giocatore all'inizio del suo turno possiede 9 territori, avrà diritto a rinforzare le proprie armate con tre ulteriori carri armati.
+            Ovviamente a tali carri armati verranno aggiunti eventuali carri bonus come spiegato nella sezione Bonus.
+            <br>
+            Una volta stabiliti i rinforzi, il giocatore può decidere di svolgere una delle due seguenti azioni: Attacco e/o Spostamento.
+            <br>
+            <br>
+            Attacco: Al suo turno, il giocatore può decidere di attaccare un numero a sua scelta di territori confinanti con le proprie armate. La fase di attacco si svolge tra il giocatore che attacca 
+            e quello che difende attraverso il lancio dei dadi. Il numero dei dadi da lanciare è stabilito dal numero di armate che si decide di schierare in guerra meno una, fino ad un massimo di tre dadi per volta.
+            Quindi se il territorio dalla quale si lanci l'attacco ha 4 carri o più si può effettuare un attacco con 3 dadi, se ne ha 3 si lancia un attacco con 2 dati e se na ha uno si lancia un attacco con un solo dado.
+            Inoltre deve essere considerato anche il numero di carri armati in difesa del territorio. Se un territorio ha 3 carri armati allora può essere attaccato da un massimo di 3 carri armati e così via.
+            Il numero massimo di carri armati è in pratica deciso dal minimo tra i carri armati in difesa e i carri armati in attacco meno uno.
+            Ognuno dei giocatori lancia il numero di dadi corrispondenti, e poi si confronta i valori ottenuti, il più alto dell'attaccante con il più alto del difensore, il secondo con il secondo e così via. 
+            Per ogni punteggio più alto, il perdente deve togliere un'armata dal tabellone. In caso di parità il punto va al difensore. La fase di attacco può continuare fino a che uno dei due giocatori non ha esaurito le armate 
+            (e in tal caso il territorio viene conquistato) o se l'attaccante decide deliberatamente di sospendere l'attacco.
+            Una volta che un giocatore conquista un nuovo territorio, pesca una carta territorio. Su di esse, oltre al simbolo di un territorio (che in questa fase non viene considerato) c'è un piccolo stemma raffigurante un cannone, un fante o un cavaliere. 
+            Questi stemmi permettono di accrescere ulteriormente il rinforzo. 
+            <br>
+            <br>
+            Spostamento: conclusa la fase di attacco, il giocatore può decidere di eseguire un solo spostamento, di quante armate vuole, da un territorio ad un altro. Da notare che la fase di attacco non è obbligatoria, 
+            ma effettuando una fase di spostamento il turno termina automaticamente. 
+            Quando si conquista un territorio è permesso lo spostamento di un numero arbitrario di carri armati che è pari al massimo di carri presenti nel territorio attaccante meno uno.
+            
+            </div>
+          </td>
+        </tr>
+      </table>
+      <br><br>
+      <div id='copyright'>
+        &copy; 2020 Danny Casa e Salvo Vultaggio. All Rights Reserved.
+      </div>
+    </div>
+
+    <script type="text/javascript" src='https://cdn.socket.io/socket.io-1.4.5.js'></script>
+    <script> 
+      var boxInput = document.getElementById("name-input");
+      var boxForm = document.getElementById("nickname-form");
+      var buttonID = document.getElementById("nick")
+      var socket = io(); 
+
+      var joinGame = function(e) {
+        var nickname = boxInput.value;
+        console.log(nickname);
+        socket.emit("new player", {nick: nickname});
+        location.replace("./client/map.html");
+      }
+
+      socket.on ('player-info', function(data) {
+        console.log(data.msg);
+        });
+
+      socket.on ('full' , function() {
+        alert("Impossibile partecipare alla partita!\n Ci sono già quattro partecipanti oppure è iniziata!");
+      });
+
+      buttonID.onclick = function (e) {
+        e.preventDefault();
+        joinGame();
+      };
+
+    </script>
+  </body>
+</html>
