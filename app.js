@@ -8,13 +8,12 @@ var app = express();
 var server = http.Server(app);
 var io = socketIO(server);
 
-app.set('port', 5000);
+app.set('port', 4040);
 app.use('/client', express.static(__dirname + '/client'));
 
 app.get('/', function(request, response) {
     response.sendFile(path.join(__dirname, '/client/index.html'));
   });
-
 
 // Starts the server.
 server.listen(4040, function() {
@@ -35,6 +34,8 @@ var Player = function (number,color,nick,id) {
     color:color,
     states: {},
     simbols: {},
+    bonus: 0,
+    stateNumber: 0,
     nickname:nick,
     id:id
   }
@@ -69,11 +70,30 @@ Player.update = function(socket) {
 }
 
 io.on('connection', function(socket) {
+  // Ad ogni connessione, do un id alla socket e la aggiungo alla lista delle socket.
   socket.id = Math.random();
   SOCKET_LIST[socket.id] = socket;
-
+  
   console.log(socket.id);
+  console.log(SOCKET_LIST);
+  console.log(Object.keys(SOCKET_LIST));
+/*
+  // Questa viene richiamata quando un client si disconnette.
+  socket.on('disconnect', function() {    
+    // Rimuovo il client dalla lista di socket e dei giocatori.
+    delete SOCKET_LIST[socket.id];
+    Player.onDisconnect(socket);
 
+    // Se la partita è iniziata informo gli altri che un giocatore è andato offline. La partita viene interrotta.
+    if (started) {
+      for (var i in SOCKET_LIST) {
+        var socket = SOCKET_LIST[i];
+        socket.emit("end-offline");
+      }
+    }
+  });
+*/
+  // Viene richiamata quando un giocatore si registra alla partita.
   socket.on('new player', function(data) {
     // Se ci sono già 4 giocatori o la partita è iniziata.
     if (playerNumber == 4 || started) {
@@ -82,8 +102,8 @@ io.on('connection', function(socket) {
       return;
     }
 
+    // Altrimenti creo una variabile player e aumento il numero dei giocatori.
     var player = Player(playerNumber,colori[playerNumber],data.nick,socket.id);
-
     playerNumber++;
 
     // Invio ai client alcune informazioni e sanno che devono attendere.
@@ -92,28 +112,22 @@ io.on('connection', function(socket) {
     });
   });
 
-  // Questa viene richiamata quando un client si disconnette.
-  socket.on('disconnect', function() {
-    // Rimuovo il client dalla lista di socket e dei giocatori.
-    delete SOCKET_LIST[socket.id];
-    Player.onDisconnect(socket.id);
-
-    // Informo gli altri che un giocatore è andato offline. La partita viene interrotta.
-    for (var i in SOCKET_LIST) {
-      var socket = SOCKET_LIST[i];
-      socket.emit("end-offline");
-    }
-  });
-
+  // Viene richiamata quando un client invia un messaggio in chat.
   socket.on('sendMsgToServer', function(data) {
-    var playerName = Player.list[socket.id].nick;
-
+    //var playerName = Player.list[socket.id].nick;
+    // Invio a tutti i client il messaggio.
     for (var i in SOCKET_LIST) {
-      SOCKET_LIST[i].emit('addToChat', playerName + ': ' + data);
+      SOCKET_LIST[i].emit('addToChat', 'hi' + ': ' + data);
     }
   });
 
+  // Viene richiamata quando viene inviato un messaggio di "debug".
+  socket.on('evalServer', function(data) {
+    var res = eval(data);
+    socket.emit('evalAnswer',res);
+  });
 });
+
 
 setInterval(function() {
   var infoGiocatori = Player.update();
