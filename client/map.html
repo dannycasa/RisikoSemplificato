@@ -3,7 +3,6 @@
   <head>
     <title>Risiko</title>
     <link rel='icon' type='image/png' href='/client/img/mappa.jpg' />
-    <link rel='stylesheet' type='text/css' href='/dist/main.bundle.css' />
   </head>
 
   <body>
@@ -11,64 +10,106 @@
       <table>
         <tr>
           <td>
-            <canvas id="map" width="1440" height="810" style="border:1px solid #000000;">
+            <canvas id="map" width="1296" height="729" style="border:1px solid #000000;">
             </canvas>
           </td>
           <td>
-            <div id="chat-text" style="width:500px;height:100px;overflow-y:scroll">
-
+            <div id="chat-text" style="width:350px;height:100px;overflow-y:scroll">
+              <div>Hello!</div>
             </div>
-            <form id="chat-form">
-              <input id="chat-input" type="text" style="width:500px"></input>
+            <form id="chat-form" onsubmit="formFunction();return false">
+              <input id="chat-input" type="text" style="width:350px"></input>
             </form>
             <br>
-              Nome giocatore:
+            <div>
+              Nome giocatori:
+            </div>
             <br>
-            Danny.
-            <br>
-            ciao
           </td>
           
         </tr>
     </table>
     </div>
   
-
+    <script type="text/javascript" src="/client/js/states.js"></script>
+    <script type="text/javascript" src='https://cdn.socket.io/socket.io-1.4.5.js'></script>
     <script>
-      var chatText = document.getElementById("chat-text");
-      var chatInput = document.getElementById("chat-input");
-      var chatForm = document.getElementById("chat-form");
-
+      // Da qui fino alla chiusura di image.onload serve per ridimensionare ed inserire la mappa nel canvas.
       var canvas = document.getElementById("map");
       var context = canvas.getContext("2d");      
       var canvasCopy = document.createElement("canvas");
       var copyContext = canvasCopy.getContext("2d");
       var image = new Image();
-      image.src = "./img/mappa.jpg"; 
+      image.src = "/client/img/mappa.jpg"; 
 
       image.onload = function () {   
         canvasCopy.width = image.width;
         canvasCopy.height = image.height;
         copyContext.drawImage(image, 0, 0);
 
-        canvas.width = 1440;
-        canvas.height = 810;
+        canvas.width = 1296;
+        canvas.height = 729;
         context.drawImage(canvasCopy, 0, 0, canvasCopy.width, canvasCopy.height, 0, 0, canvas.width, canvas.height);
+
+        states.forEach(state => {
+          context.beginPath();
+          context.globalAlpha = 0.0;
+          context.arc(state.x, state.y, state.radius, 0, 2 * Math.PI, false);
+          context.fillStyle = "rgba(255, 0,0,0.7)";
+          context.fill();
+        });
+
+        
       }
+
+      function isIntersect(point, circle) {
+        return Math.sqrt((point.x-circle.x) ** 2 + (point.y - circle.y) ** 2) < circle.radius;
+      }
+
+      canvas.addEventListener('click', (e) => {
+        const pos = {
+          x: e.clientX,
+          y: e.clientY
+        };
+        states.forEach(state => {
+          if (isIntersect(pos, state)) {
+            console.log ('click on state' + state.name);
+          }
+        });
+      });
+
 
       var socket = io();
 
+      // Aggiungo quello che ricevo alla chat.
+      var chatText = document.getElementById('chat-text');
       socket.on('addToChat', function(data) {
-        chatText.innerHTML += '<div>' + data + '</data>';
+        chatText.innerHTML += '<div>' + data + '</div>';
+      });
+
+      // Utilizzo per debug. Ad esempio inserendo in chat /Player.list avrò la lista dei giocatori nella console.
+      socket.on('evalAnswer', function(data) {
+        console.log(data);
       });
       
-      chatForm.onSubmit = function (e) {
-        e.preventDefault();
-        sock.emit('sendMsgToService', chatInput.value);
-        chatInput.value = '';
-      };
+      formFunction = function() {
+        // Recupero gli elementi di chat.
+        var chatInput = document.getElementById('chat-input');
+        var chatForm = document.getElementById('chat-form');
 
+        if (chatInput.value[0] == '/') {
+          socket.emit('evalServer', chatInput.value.slice(1));
+        }
+        else {
+          socket.emit('sendMsgToServer', chatInput.value);
+        }
+        // Resetto il valore della casella di chat.
+        chatInput.value = '';
+        
+      };
+      
     </script>
+    
   </body>
   
   
