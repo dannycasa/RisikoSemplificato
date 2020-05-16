@@ -3,6 +3,7 @@ var express = require('express');
 var http = require('http');
 var path = require('path');
 var socketIO = require('socket.io');
+var stateModule = require('./client/js/states.js');
 
 var app = express();
 var server = http.Server(app);
@@ -14,6 +15,12 @@ app.use('/client', express.static(__dirname + '/client'));
 app.get('/', function(request, response) {
     response.sendFile(path.join(__dirname, '/client/index.html'));
   });
+
+//import {states} from './client/js/states.js';
+//import {continents} from  './client/js/states.js';
+
+let val = stateModule.states;
+console.log(val);
 
 // Starts the server.
 server.listen(4040, function() {
@@ -49,8 +56,8 @@ Player.onConnect = function(socket) {
   var player = Player.list[socket.id];
 }
 
-Player.onDisconnect = function (socket) {
-  delete Player.list[socket.id];
+Player.onDisconnect = function (sockID) {
+  delete Player.list[sockID];
 }
 
 Player.update = function(socket) {
@@ -69,20 +76,39 @@ Player.update = function(socket) {
   return infoGiocatori;
 }
 
+// Funzione Per assegnare gli stati.
+function assignState(player) {
+  player.stateNumber =  Math.floor(Math.random() * 15);
+  for(var i = 0 ; i < player.stateNumber  ; i++) {
+    s = Math.floor(Math.random() * 30);
+
+    //controllo che non sia già stato assegnato
+    for(var j = 0; j<player.states.length; j++) {
+      if(player.states[j] != states[s]) {
+        player.states[i] = states[s];
+      }
+      else {
+        s = Math.floor(Math.random() * 30);
+      }
+    }
+  }
+}
+
 io.on('connection', function(socket) {
   // Ad ogni connessione, do un id alla socket e la aggiungo alla lista delle socket.
   socket.id = Math.random();
+  let socketID = socket.id;
   SOCKET_LIST[socket.id] = socket;
   
   console.log(socket.id);
   console.log(SOCKET_LIST);
   console.log(Object.keys(SOCKET_LIST));
-/*
+
   // Questa viene richiamata quando un client si disconnette.
   socket.on('disconnect', function() {    
     // Rimuovo il client dalla lista di socket e dei giocatori.
-    delete SOCKET_LIST[socket.id];
-    Player.onDisconnect(socket);
+    delete SOCKET_LIST[socketID];
+    Player.onDisconnect(socketID);
 
     // Se la partita è iniziata informo gli altri che un giocatore è andato offline. La partita viene interrotta.
     if (started) {
@@ -92,7 +118,7 @@ io.on('connection', function(socket) {
       }
     }
   });
-*/
+
   // Viene richiamata quando un giocatore si registra alla partita.
   socket.on('new player', function(data) {
     // Se ci sono già 4 giocatori o la partita è iniziata.
@@ -128,7 +154,7 @@ io.on('connection', function(socket) {
   });
 });
 
-
+/*
 setInterval(function() {
   var infoGiocatori = Player.update();
   for (var i in SOCKET_LIST) {
@@ -136,3 +162,4 @@ setInterval(function() {
     socket.emit('update', infoGiocatori);
   }
 }, 1000 / 60);
+*/

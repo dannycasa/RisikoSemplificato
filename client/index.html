@@ -11,8 +11,8 @@
         <form id='name-form'>
           <input type='text' id='name-input' placeholder='Nickname'
             autocomplete='off' />
-          <button id='nick' form='name-form'>
-            Gioca
+          <button id='nick' form='nickname-form'>
+            Inizia a giocare
           </button>
         </form>
       </div>
@@ -153,15 +153,15 @@
     <script type="text/javascript" src='https://cdn.socket.io/socket.io-1.4.5.js'></script>
     <script> 
       var boxInput = document.getElementById("name-input");
-      var boxForm = document.getElementById("name-form");
-
+      var boxForm = document.getElementById("nickname-form");
+      var buttonID = document.getElementById("nick");
       var socket = io(); 
 
       var joinGame = function(e) {
-        var nickname = document.getElementById('name-input').value;
+        var nickname = boxInput.value;
         console.log(nickname);
         socket.emit("new player", {nick: nickname});
-        window.location.replace("./map.html");
+        location.replace("./client/map.html");
       }
 
       socket.on ('player-info', function(data) {
@@ -172,7 +172,7 @@
         alert("Impossibile partecipare alla partita!\n Ci sono già quattro partecipanti oppure è iniziata!");
       });
 
-      boxForm.onSubmit = function (e) {
+      buttonID.onclick = function (e) {
         e.preventDefault();
         joinGame();
       };

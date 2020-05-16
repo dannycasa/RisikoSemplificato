@@ -10,7 +10,7 @@
       <table>
         <tr>
           <td>
-            <canvas id="map" width="1296" height="729" style="border:1px solid #000000;">
+            <canvas id="map" width="1296" height="729" style="background-image: url('/client/img/mappa.jpg'); border:1px solid #000000;">
             </canvas>
           </td>
           <td>
@@ -34,23 +34,13 @@
     <script type="text/javascript" src="/client/js/states.js"></script>
     <script type="text/javascript" src='https://cdn.socket.io/socket.io-1.4.5.js'></script>
     <script>
-      // Da qui fino alla chiusura di image.onload serve per ridimensionare ed inserire la mappa nel canvas.
+      // Recupero l'elemento canvas e il constesto del canvas.
       var canvas = document.getElementById("map");
-      var context = canvas.getContext("2d");      
-      var canvasCopy = document.createElement("canvas");
-      var copyContext = canvasCopy.getContext("2d");
-      var image = new Image();
-      image.src = "/client/img/mappa.jpg"; 
+      var context = canvas.getContext("2d");    
+      var timer;    
 
-      image.onload = function () {   
-        canvasCopy.width = image.width;
-        canvasCopy.height = image.height;
-        copyContext.drawImage(image, 0, 0);
-
-        canvas.width = 1296;
-        canvas.height = 729;
-        context.drawImage(canvasCopy, 0, 0, canvasCopy.width, canvasCopy.height, 0, 0, canvas.width, canvas.height);
-
+      // Per ogni stato in state creo una circonferenza invisibile di un certo raggio sul nome di ogni stato nella mappa.
+     function initCircle() {
         states.forEach(state => {
           context.beginPath();
           context.globalAlpha = 0.0;
@@ -58,12 +48,44 @@
           context.fillStyle = "rgba(255, 0,0,0.7)";
           context.fill();
         });
+      };
 
-        
-      }
+      initCircle();
 
       function isIntersect(point, circle) {
         return Math.sqrt((point.x-circle.x) ** 2 + (point.y - circle.y) ** 2) < circle.radius;
+      }
+
+      function flashObject (state) {
+        clearInterval(timer);
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        initCircle();
+        var count = 1000;
+        timer = setInterval(function() {
+          count --;
+          if (count % 2 == 1) {
+            for (var neighbors in state.neighbor) {
+              // Per ogni vicino disegno un cerchio rosso lampeggiante.
+              states.forEach(neighborsState => {
+                if (neighborsState.name == state.neighbor[neighbors]) {
+                  context.beginPath();
+                  context.globalAlpha = 1;
+                  context.arc(neighborsState.x, neighborsState.y, neighborsState.radius/2, 0, 2 * Math.PI, false);
+                  context.fillStyle = "red";
+                  context.fill();                                            
+                }
+              }); 
+            }
+          }
+          else {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            initCircle();
+          }
+
+          if(count == 0) {
+            count = 1000;
+          }
+        },300);
       }
 
       canvas.addEventListener('click', (e) => {
@@ -71,15 +93,20 @@
           x: e.clientX,
           y: e.clientY
         };
+
+        // Scorro gli stati.
         states.forEach(state => {
+          // Se ho cliccato su uno stato allora continuo.
           if (isIntersect(pos, state)) {
-            console.log ('click on state' + state.name);
+            console.log(state.neighbor);
+            // Recupero i vicini dello stato cliccato.
+            flashObject(state);
           }
         });
       });
 
 
-      var socket = io();
+      //var socket = io();
 
       // Aggiungo quello che ricevo alla chat.
       var chatText = document.getElementById('chat-text');
