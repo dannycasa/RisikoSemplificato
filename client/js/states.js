@@ -1,5 +1,4 @@
-module.exports = {
-    states: [
+const states = [
       {
         name: 'Groenlandia',
         continent: 'America Settentrionale',
@@ -287,7 +286,7 @@ module.exports = {
         radius: 20,
         neighbor: [
           'Africa del Nord',
-          'Europa Meriodionale',
+          'Europa Meridionale',
           'Medio Oriente',
           'Africa Orientale'
         ]
@@ -541,7 +540,7 @@ module.exports = {
         radius: 20,
         neighbor: [
           'Indonesia',
-          'Austalia Occidentale',
+          'Australia Occidentale',
           'Australia Orientale'
         ]
       },
@@ -566,7 +565,7 @@ module.exports = {
         y: 624,
         radius: 20,
         neighbor: [
-          'Austrlia Occidentale',
+          'Australia Occidentale',
           'Nuova Guinea'
         ]
       },
@@ -583,9 +582,9 @@ module.exports = {
           'Australia Orientale'
         ]
       }
-  ],
-
-  continents: [
+  ];
+  
+const continents = [
       {
         name: 'America Settentrionale',
         bonus: 5
@@ -615,5 +614,23 @@ module.exports = {
         name: 'Oceania',
         bonus: 2
       }
-  ]
-}
+  ];
+
+  const symbols = [
+    'Fante',
+    'Cannone',
+    'Cavaliere'
+  ];
+
+  // I colori sono verde, rosso, giallo e blu.
+  const colors = [
+    '#00ff00', 
+    '#ff0000', 
+    '#ffff00', 
+    '#0000ff'
+  ];
+
+ exports.statesList = states;
+ exports.continentsList = continents;
+ exports.symbolsList = symbols;
+ exports.colorsList = colors;

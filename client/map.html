@@ -37,7 +37,9 @@
       // Recupero l'elemento canvas e il constesto del canvas.
       var canvas = document.getElementById("map");
       var context = canvas.getContext("2d");    
-      var timer;    
+      var timer;  
+      var players = [];  
+      var nickname;
 
       // Per ogni stato in state creo una circonferenza invisibile di un certo raggio sul nome di ogni stato nella mappa.
      function initCircle() {
@@ -63,6 +65,7 @@
         var count = 1000;
         timer = setInterval(function() {
           count --;
+          // Alterno il disegno dei cerchi e la rimozione per fare un effetto lampeggiante.
           if (count % 2 == 1) {
             for (var neighbors in state.neighbor) {
               // Per ogni vicino disegno un cerchio rosso lampeggiante.
@@ -80,6 +83,7 @@
           else {
             context.clearRect(0, 0, canvas.width, canvas.height);
             initCircle();
+            update();
           }
 
           if(count == 0) {
@@ -93,7 +97,7 @@
           x: e.clientX,
           y: e.clientY
         };
-
+        var trovato = -1;
         // Scorro gli stati.
         states.forEach(state => {
           // Se ho cliccato su uno stato allora continuo.
@@ -101,12 +105,24 @@
             console.log(state.neighbor);
             // Recupero i vicini dello stato cliccato.
             flashObject(state);
+            trovato = 1;
+            break;
           }
+          else
+            trovato = 0;
         });
+
+        // Se trovato è zero devo azzerare il timer.
+        if (trovato == 0) {
+          clearInterval(timer);
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          initCircle();
+          update();
+        }
       });
 
 
-      //var socket = io();
+      var socket = io();
 
       // Aggiungo quello che ricevo alla chat.
       var chatText = document.getElementById('chat-text');
@@ -118,7 +134,67 @@
       socket.on('evalAnswer', function(data) {
         console.log(data);
       });
+
+      // Mi salvo il mio nickname.
+      socket.on('playerInfo', function(data) {
+        nickname = data.player.nickname;
+      });
+
+      // Questi due sono messaggi di 'errore' che nel normale funzionamento non dovrebbero accadere.
+      // Sono dei messaggi per prevenire l'uso di client modificati.
+      socket.on('noOwner', function(data) {
+        var type = data;
+        if (type == 'move')
+          alert("Non possiedi il territorio o i territori!");
+        else if (type == 'attack')
+          alert("Non puoi effettuare l'attacco, c'è qualcosa che non va!");
+      });
+
+      socket.on('noTroops', function() {
+        alert("Non possiedi abbastanza truppe. \n Lo stato di partenza deve rimanere almeno con un carro armato.");
+      });
       
+      // Il server mi sta inviando le nuove informazioni da mostrare.
+      socket.on('update', function(data) {
+        // Pulisco
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        initCircle();
+        players = data.player; 
+        // Disegno le nuove informazioni.  
+        update();
+      });
+
+      // Avviso il giocatore che ha conquistato lo stato e gli dico che carta ha pescato.
+      socket.on('stateWon', function(data) {
+        var name = data.name;
+        var symbol = data.symbol;
+        alert("Complimenti hai vinto tutti gli scontri e conquistato lo stato " + name + '.\nHai pescato una carta ' + symbol + ".");
+      });
+
+      // L'attaccante non è riuscito a conquistare lo stato.
+      socket.on('stateNotWon', function(data) {
+        var name = data.name;
+        var player = data.player;
+        var battle = data.battleWon;
+        var total = data.totalBattle;
+
+        if (player == nickname) {
+          alert("Lo stato attaccante ha vinto " + battle + "battaglie su " + total + ".\nLo stato " + name + " rimane a te.");
+        }
+
+        else {
+          alert("Lo stato attaccante ha vinto " + battle + "battaglie su " + total + ".\nLo stato " + name + " rimane a " + player + ".");
+        }
+        
+      });
+
+      // Avviso il giocatore che ha perso lo stato.
+      socket.on('stateLost', function(data) {
+        var name = data.name;
+        var player = data.player;
+        alert("Peccato hai perso tutti gli scontri contro " + player + " e perso lo stato " + name + ".");
+      });      
+
       formFunction = function() {
         // Recupero gli elementi di chat.
         var chatInput = document.getElementById('chat-input');
@@ -132,12 +208,24 @@
         }
         // Resetto il valore della casella di chat.
         chatInput.value = '';
-        
       };
-      
+
+      // Funzione che aggiorna le informazioni sullo schermo dei client.
+      update = function() {
+        for (var i = 0; i < players.lenght; i++) {
+          for (var j = 0; j < players[i].states.lenght; j++) {
+            states.forEach(state => {
+              if (state.name == players[i].states[j]) {
+                context.beginPath();
+                context.globalAlpha = 1;
+                cotext.fillStyle = players[i].color;
+                //context.font="14px verdana";
+                context.fillText(players[i].states[j].troop, state.x, state.y);
+              }
+            });
+          }
+        }
+      }
     </script>
-    
-  </body>
-  
-  
+  </body>  
 </html>
