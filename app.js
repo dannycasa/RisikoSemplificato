@@ -32,6 +32,7 @@ let states = stateModule.statesList;
 let continents = stateModule.continentsList;
 let symbols = stateModule.symbolsList;
 
+
 // Costruttore Giocatori.
 var Player = function (number,color,nick,id) {
   var self  = {
@@ -42,7 +43,8 @@ var Player = function (number,color,nick,id) {
     bonus: 0,
     stateNumber: 0,
     nickname:nick,
-    id:id
+    id:id,///////////////A CHE SERVE SE C'è GIA NUMBER
+    computation_state: "IDLE"
   }
 
   Player.list[id] = self;
@@ -65,7 +67,8 @@ Player.update = function(socket) {
       states: player.states,
       simbols: player.simbols,
       nickname:player.nickname,
-      id:player.id
+      id:player.id,///////////////A CHE SERVE SE C'è GIA NUMBER
+      computation_state:player.computation_state
     });
   }
   return infoGiocatori;
@@ -73,10 +76,11 @@ Player.update = function(socket) {
 
 // Funzione Per assegnare gli stati.
 function assignState(player) {
-  player.stateNumber =  Math.floor(Math.random() * 15);
-  for(var i = 0 ; i < player.stateNumber  ; i++) {
+  player.stateNumber = Math.floor(Math.random() * 15);
+  for(var i = 0 ; i < player.stateNumber ; i++) {
     s = Math.floor(Math.random() * 30);
-
+    player.states[i] = states[s];
+  
     //controllo che non sia già stato assegnato
     for(var j = 0; j<player.states.length; j++) {
       if(player.states[j] != states[s]) {
@@ -86,6 +90,7 @@ function assignState(player) {
         s = Math.floor(Math.random() * 30);
       }
     }
+    
   }
 }
 
@@ -104,16 +109,16 @@ io.on('connection', function(socket) {
   SOCKET_LIST[socket.id] = socket;
   
    // Viene richiamata quando un giocatore si registra alla partita.
-   socket.on('new player', function(data) {
-    // Se ci sono già 4 giocatori o la partita è iniziata.
-    if (playerNumber == 4 || started) {
+   socket.on('newPlayer', function(data) {
+    // Se ci sono già 2 giocatori o la partita è iniziata. //debug 2
+    if (playerNumber == 2|| started) {
       // Dico al client che siamo al completo.
       socket.emit("full");
       return;
     }
 
     // Altrimenti creo una variabile player e aumento il numero dei giocatori.
-    var player = Player(playerNumber,colori[playerNumber],data.nick,socket.id);
+    var player = Player(playerNumber,colors[playerNumber],data.nick,socket.id);
     playerNumber++;
 
     // Invio ai client alcune informazioni e sanno che devono attendere.
