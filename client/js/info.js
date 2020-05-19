@@ -616,11 +616,13 @@ const continents = [
   }
 ];
 
-const symbols = [
-  'Fante',
-  'Cannone',
-  'Cavaliere'
-];
+const symbols = {
+  'Cannone': 4,
+  'Fante': 6,
+  'Cavaliere': 8,
+  'Diversi': 10,
+  'Jolly': 12
+};
 
 // I colori sono verde, rosso, giallo e blu.
 const colors = [

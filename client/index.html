@@ -163,22 +163,25 @@
           alert("Devi inserire un nickname!");
           return;
         }
-        socket.emit("newPlayer", {nick: nickname});
+        socket.emit("newPlayer", nickname);
       }
 
-      // Se ricevo questo vuol dire che sono stato accettato.
+      // Se ricevo questo messaggio vuol dire che sono stato accettato.
       socket.on ('playerAccepted', function() {
         location.replace("./client/map.html");
       });
 
+      // Se ricevo questo messaggio vuol dire che c'è già un giocatore con il nickname inserito.
       socket.on("nickNotAvailable", function() {
         alert("Nickname già presente, sceglierne un altro.");
         boxInput.value = "";
       });
 
+      // Se ricevo questo messaggio vuol dire che la partità è già al completo.
       socket.on ('full' , function() {
         alert("Impossibile partecipare alla partita!\n Ci sono già quattro partecipanti oppure la partita è iniziata!");
-        location.replace("./client/index.html");
+        //location.replace("./client/index.html");
+        boxInput.value = "";
       });
 
       buttonID.onclick = function (e) {

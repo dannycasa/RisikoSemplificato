@@ -10,8 +10,7 @@
       <table>
         <tr>
           <td>
-            <canvas id="map" width="1296" height="729" style="background-image: url('/client/img/mappa.jpg'); border:1px solid #000000;">
-            </canvas>
+            <canvas id="map" width="1296" height="729" style="background-image: url('/client/img/mappa.jpg'); border:1px solid #000000;"></canvas>
           </td>
           <td>
             <div id="chat-text" style="width:350px;height:100px;overflow-y:scroll">
@@ -23,6 +22,9 @@
             <br>
             <div>
               Nome giocatori:
+              <div id="playerlist" width="350px" style="border:1px solid #000000;"></div>
+              Turno del giocatore:
+              <div id="playerTurn" widht="350px" style="border:1px solid #000000;"></div>
             </div>
             <br>
           </td>
@@ -34,12 +36,17 @@
     <script type="text/javascript" src="/client/js/info.js"></script>
     <script type="text/javascript" src='https://cdn.socket.io/socket.io-1.4.5.js'></script>
     <script>
-      // Recupero l'elemento canvas e il constesto del canvas.
+      // Recupero l'elemento canvas e il constesto del canvas della mappa.
       var canvas = document.getElementById("map");
       var context = canvas.getContext("2d");    
       var timer;  
       var players = [];  
       var nickname;
+
+      // Aggiungo quello che ricevo alla chat.
+      var chatText = document.getElementById('chat-text');
+      var playerList = document.getElementById('playerList');
+      var playerTurn = document.getElementById('playerTurn');
 
       // Recupero gli stati possibili, il territorio cliccato e lo stato corrente.
       var clientStates = playerState;
@@ -113,7 +120,47 @@
             // Recupero i vicini dello stato cliccato.
             flashObject(state);
             trovato = 1;
-            //possible_victims.addEventListener("click", socket.emit('attackPlayer', possible_victims[this]));
+/*
+            //vedo se lo stato cliccato è mio
+            if(this.player.states.includes("currentLocation"))
+            {
+              //sono all'interno di un mio stato
+              socket.emit('myState',currentLocation); // emit an event to the socket
+
+              //mi immagino che il server comunica al client che può muovere le truppe se ce le ha verso lo stato selezionato
+              socket.on('replymyState', function(data){
+
+                if(data == 1){//se posso muovere le truppe, variabile settata dal server che me la manda in risposta 
+                socket.emit('moveTroops');
+                }
+                else if(data == 2){//se posso aggiungere le truppe, variabile settata dal server che me la manda in risposta 
+                socket.emit('addTroops');
+                }
+                //finisco il turno
+                player.computationState = playerState.IDLE;
+                socket.emit('endTurn'); // il server deve essere in ascolto per capire quando finsice il turno    
+              });
+            }
+            else
+            {
+              //lo stato non è mio
+              socket.emit('notMyState', currentLocation); // emit an event to the socket
+              var canAttack = false;
+              //mi immagino che il server mi comunica se voglio attaccare quello stato
+              socket.on('replynotmyState', function(data){
+
+                //nel while ci starebbe messo in OR la condizione di aver cliccato il bottone termina turno
+                if(data == 0) //variabile settata dal server che me la manda in risposta 
+                {
+                  player.computationState = playerState.ATTACK;
+                  socket.emit('attackPlayer', //ID del player che attacco//); //l'ID penso che serva al server per capire contro chi mi devo scontrare
+                }
+                //finisco il turno
+                player.computationState = playerState.IDLE;
+                socket.emit('endTurn'); // il server deve essere in ascolto per capire quando finsice il turno   
+              });
+            }
+*/
           }
         });
 
@@ -125,13 +172,10 @@
           update();
         }
       });
-
-
+      
       var socket = io();
-
-      // Aggiungo quello che ricevo alla chat.
-      var chatText = document.getElementById('chat-text');
      
+      // Aggiungo il messaggio ricevuto alla chat.
       socket.on('addToChat', function(data) {
         chatText.innerHTML += '<div>' + data + '</div>';
       });
@@ -143,29 +187,29 @@
 
       // Mi salvo il mio nickname.
       socket.on('playerInfo', function(data) {
-        nickname = data.player.nickname;
+        nickname = data;
       });
 
-      // Questi due sono messaggi di 'errore' che nel normale funzionamento non dovrebbero accadere.
-      // Sono dei messaggi per prevenire l'uso di client modificati.
-      socket.on('noOwner', function(data) {
+      // Gestisce un messaggio di errore mostrando un alert dedicato.
+      socket.on('error', function(data) {
         var type = data;
-        if (type == 'move')
+        if (type == 'move') 
           alert("Non possiedi il territorio o i territori!");
         else if (type == 'attack')
           alert("Non puoi effettuare l'attacco, c'è qualcosa che non va!");
-      });
-
-      socket.on('noTroops', function() {
-        alert("Non possiedi abbastanza truppe. \n Lo stato di partenza deve rimanere almeno con un carro armato.");
+        else if (type == 'noTroops')
+          alert("Non possiedi abbastanza truppe. \n Lo stato di partenza deve rimanere almeno con un carro armato.");
+        else if (type == 'noTurn')
+          alert("Non è il tuo turno. \n Attendi che ti avvisi il server.");
       });
       
       // Il server mi sta inviando le nuove informazioni da mostrare.
       socket.on('update', function(data) {
-        // Pulisco
+        // Pulisco il canvas.
         context.clearRect(0, 0, canvas.width, canvas.height);
         initCircle();
-        players = data.player; 
+        players = data; 
+
         // Disegno le nuove informazioni.  
         update();
       });
@@ -185,11 +229,11 @@
         var total = data.totalBattle;
 
         if (player == nickname) {
-          alert("Lo stato attaccante ha vinto " + battle + "battaglie su " + total + ".\nLo stato " + name + " rimane a te.");
+          alert("Lo stato attaccante ha vinto " + battle + " battaglie su " + total + ".\nLo stato " + name + " rimane a te.");
         }
 
         else {
-          alert("Lo stato attaccante ha vinto " + battle + "battaglie su " + total + ".\nLo stato " + name + " rimane a " + player + ".");
+          alert("Lo stato attaccante ha vinto " + battle + " battaglie su " + total + ".\nLo stato " + name + " rimane a " + player + ".");
         }
         
       });
@@ -198,9 +242,10 @@
       socket.on('stateLost', function(data) {
         var name = data.name;
         var player = data.player;
-        alert("Peccato hai perso tutti gli scontri contro " + player + " e perso lo stato " + name + ".");
+        alert("Peccato, hai perso tutti gli scontri contro " + player + " e perso lo stato " + name + ".");
       });      
 
+      // Funzione che viene richiamata quando viene premuto enter nell'input della chat.
       formFunction = function() {
         // Recupero gli elementi di chat.
         var chatInput = document.getElementById('chat-input');
@@ -218,6 +263,8 @@
 
       // Funzione che aggiorna le informazioni sullo schermo dei client.
       update = function() {
+        playerList.empty();
+        playerTurn.empty();
         for (var i = 0; i < players.lenght; i++) {
           for (var j = 0; j < players[i].states.lenght; j++) {
             states.forEach(state => {
@@ -229,6 +276,17 @@
                 context.fillText(players[i].states[j].troop, state.x, state.y);
               }
             });
+          }
+          // Aggiorno sia la lista dei giocatori (in realtà basterebbe farlo solo la prima volta), il giocatore che ha il turno e cosa sta facendo.
+          playerList.innerHTML += '<div style="color:' + players[i].color +'">' + players[i].nickname + '</div>';
+
+          if (players[i].computationState != clientStates.WAITER && players[i].computationState != clientStates.IDLE) {
+            if (players[i].computationState == clientStates.ASSIGN)
+              playerTurn.innerHTML += '<div style="color:' + players[i].color +'">' + players[i].nickname + ', al momento sta assegnando le truppe. </div>';
+            else if (players[i].computationState == clientStates.ATTACK)
+              playerTurn.innerHTML += '<div style="color:' + players[i].color +'">' + players[i].nickname + ', al momento sta decidendo se fare un attacco. </div>';
+            else if (players[i].computationState == clientStates.MOVE)
+              playerTurn.innerHTML += '<div style="color:' + players[i].color +'">' + players[i].nickname + ', al momento sta effettuando lo spostamento finale. </div>';
           }
         }
       }
