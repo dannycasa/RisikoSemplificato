@@ -377,6 +377,32 @@ io.on('connection', function(socket) {
     }
   });
 
+  //Viene richiamata quando un client clicca su uno stato suo
+  socket.on('myState',function(data){
+    //data è la posizione attuale del client
+
+    //cosa può fare ora il client? 
+    //1.muovere le truppe al territorio selezionato
+    // se si comunico che può muovere le truppe
+    socket.emit('replymyState',1);
+
+    //2.aggiungere le truppe al territorio selezionato
+    // se si comunico che può aggiungere le truppe
+    socket.emit('replymyState',2);
+
+  });
+
+  //Viene richiamata quando un client clicca su uno stato non suo
+  socket.on('notmyState', function(data){
+    //data è la posizione attuale del client
+
+  //cosa può fare ora il client? 
+  //1. può attaccare?
+  // se si lo comunico
+  socket.emit('replynotmyState',0);
+  });
+
+
   // Viene richiamata quando un client invia un messaggio in chat.
   socket.on('sendMsgToServer', function(data) {
     var playerName = Player.list[socket.id].nick;
