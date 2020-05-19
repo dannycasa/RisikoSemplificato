@@ -3,13 +3,12 @@ var express = require('express');
 var http = require('http');
 var path = require('path');
 var socketIO = require('socket.io');
-var stateModule = require('./client/js/states.js');
-
-
+var stateModule = require('./client/js/info.js');
 var app = express();
 var server = http.Server(app);
 var io = socketIO(server);
 
+// Imposto la porta e i path predefiniti.
 app.set('port', 4040);
 app.use('/client', express.static(__dirname + '/client'));
 
@@ -18,34 +17,35 @@ app.get('/', function(request, response) {
   });
 
 
-// Starts the server.
+// Inizializzo il server.
 server.listen(4040, function() {
     console.log('Starting server on port 4040');
   });
 
-// Add the WebSocket handlers
-var SOCKET_LIST = {};
-var playerNumber = 0;
-var started = false;
-var colors = stateModule.colorsList;
-let states = stateModule.statesList;
-let continents = stateModule.continentsList;
-let symbols = stateModule.symbolsList;
+// Queste variabili contengono rispettivamente:
+var SOCKET_LIST = {};                             // La lista delle socket dei rispettivi giocatori,
+var playerNumber = 0;                             // Il numero dei giocatori,
+var started = false;                              // Se la partita è iniziata,
+var colors = stateModule.colorsList;              // La lista dei colori disponibili,
+let states = stateModule.statesList;              // La lista degli stati della mappa,
+let continents = stateModule.continentsList;      // La lista dei continenti della mappa,
+let symbols = stateModule.symbolsList;            // La lista dei simboli,
+let playerState = stateModule.playerStateList;    // La lista dei possibili stati dei giocatori.
 
 // Costruttore Giocatori.
-var Player = function (number,color,nick,id) {
+var Player = function (number,color,nick) {
   var self  = {
-    number:number,
-    color:color,
+    number: number,
+    color: color,
     states: [],
     simbols: [],
     bonus: 0,
     stateNumber: 0,
-    nickname:nick,
-    id:id
+    nickname: nick,
+    computationState: playerState.IDLE
   }
 
-  Player.list[id] = self;
+  Player.list[number] = self;
   return self;
 }
 
@@ -60,25 +60,48 @@ Player.update = function(socket) {
   for (var i in Player.list) {
     var player = Player.list[i];
     infoGiocatori.push({
-      number:player.number,
-      color:player.color,
+      number: player.number,
+      color: player.color,
       states: player.states,
       simbols: player.simbols,
-      nickname:player.nickname,
-      id:player.id
+      bonus: player.bonus,
+      stateNumber: player.stateNumber,
+      nickname: player.nickname,
+      computationState: player.computationState
     });
   }
   return infoGiocatori;
 }
 
+// Funzione che restituisce il giocatore data un criterio.
+Player.find = function(search) {
+  for (var i in Player.list) {
+    var player = Player.list[i];
+    // Posso cercare il giocatore per il numero.
+    if (typeof search == "number") {
+      if (player.number == search)
+        return player;
+    }
+    // Posso cercare il giocatore per il nickname.
+    else if (typeof search == "string") {
+      if (player.nickname == search)
+        return player;
+    }
+  }
+  return null;
+}
+
+/*
 // Funzione Per assegnare gli stati.
 function assignState(player) {
   player.stateNumber =  Math.floor(Math.random() * 15);
-  for(var i = 0 ; i < player.stateNumber  ; i++) {
+  for(var i = 0; i < player.stateNumber; i++) {
     s = Math.floor(Math.random() * 30);
 
+    player.states[i] = states[s];
+
     //controllo che non sia già stato assegnato
-    for(var j = 0; j<player.states.length; j++) {
+    for(var j = 0; j < player.states.length; j++) {
       if(player.states[j] != states[s]) {
         player.states[i] = states[s];
       }
@@ -88,7 +111,70 @@ function assignState(player) {
     }
   }
 }
+*/
 
+/*
+  Funzione per assegnare inizialmente gli stati a tutti i giocatori.
+  Se sono due giocatori allora assegnamo 21 stati l'uno; se sono 3 giocatori 14 stati ognuno;
+  se sono 4 giocatori: 2 giocatori avranno 10 stati e gli altri due 11 stati.
+*/
+function assignStatePlayers() {
+  // Il numero di stati dipende dal numero di giocatori.
+  var number =  Math.floor(states.length / playerNumber);
+
+  // Altre variabili utili.
+  var player1;
+  var player2;
+
+  // Devo assegnare altri due stati a due giocatori casuali.
+  if (playerNumber == 4) {
+    player1 = Math.floor(Math.random() * playerNumber);
+    player2 = Math.floor(Math.random() * playerNumber);
+
+    // Così sono sicuro che player1 e 2 sono diversi.
+    while (player2 == player1) {
+      player2 = Math.floor(Math.random() * playerNumber);
+    }
+  }
+
+  // Per ogni giocatore assegno il numero di stati corretti.
+  for (var num = 0; num < playerNumber; num++) {
+    // Recupero il player corrente e gli dico quanti stati gli do.
+    var player = Player.find(num);
+
+    // Se siamo 4 giocatori e il giocatore è uno dei fortunati avrà uno stato in più.
+    if (player.number == player1 || player.number == player2) {
+      player.stateNumber = number + 1;
+    }
+
+    // Altrimenti avrà il numero di stati che gli tocca.
+    else {
+      player.stateNumber = number;
+    }
+    
+    // Gli assegno gli stati.
+    for(var i = 0; i < player.stateNumber; i++) {
+      var assigned = 0;
+      s = Math.floor(Math.random() * states.length);
+
+      // Finchè assegnato è 0, ho trovato solo stati già assegnati.
+      while (assigned == 0) {
+        // Se lo stato non ha già un possessore glielo assegno.
+        if (states[s].owner == null) {
+          player.states.push(states[s]);
+          states[s].owner = player.number;
+          assigned = 1;
+        }
+
+        else {
+          s = Math.floor(Math.random() * states.length);
+        }
+      }
+    }
+  }
+}
+
+// Questa è la funzione che invia i nuovi valori dei giocatori ai client in modo che sia tutto sincronizzato.
 function update() {
   var infoGiocatori = Player.update();
   for (var i in SOCKET_LIST) {
@@ -103,23 +189,37 @@ io.on('connection', function(socket) {
   let socketID = socket.id;
   SOCKET_LIST[socket.id] = socket;
   
-   // Viene richiamata quando un giocatore si registra alla partita.
-   socket.on('new player', function(data) {
-    // Se ci sono già 4 giocatori o la partita è iniziata.
-    if (playerNumber == 4 || started) {
+  console.log('New Connection ' + socketID);
+
+  // Viene richiamata quando un giocatore si registra alla partita.
+  socket.on('newPlayer', function(data) {
+    // Se ci sono già 2 giocatori o la partita è iniziata.
+    if (playerNumber == 2 || started) {
       // Dico al client che siamo al completo.
       socket.emit("full");
       return;
     }
 
-    // Altrimenti creo una variabile player e aumento il numero dei giocatori.
-    var player = Player(playerNumber,colori[playerNumber],data.nick,socket.id);
-    playerNumber++;
+    var nickname = data.nick;
+  
+    // Se non c'è già un giocatore con il nick inserito.
+    if(!Player.find(nickname)) {
+      // Altrimenti creo una variabile player e aumento il numero dei giocatori.
+      var player = Player(playerNumber,colors[playerNumber],nickname);
+      playerNumber++;
 
-    // Invio ai client alcune informazioni e sanno che devono attendere.
-    socket.emit('playerInfo', {
-      msg:player,
-    });
+      // Se ci sono due giocatori assegno gli stati.
+      if (playerNumber == 2) {
+        assignStatePlayers();
+      }
+
+      // Invio ai client alcune informazioni e sanno che devono attendere.
+      socket.emit('playerAccepted');
+    }
+
+    // Altrimenti dico che il nick è già preso.
+    else
+      socket.emit('nickNotAvailable');
   });
 
   // Viene richiamata quando un client si disconnette.

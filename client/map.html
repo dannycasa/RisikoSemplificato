@@ -17,7 +17,7 @@
             <div id="chat-text" style="width:350px;height:100px;overflow-y:scroll">
               <div>Hello!</div>
             </div>
-            <form id="chat-form" onsubmit="formFunction();return false">
+            <form id="chat-form" onsubmit="formFunction(); return false">
               <input id="chat-input" type="text" style="width:350px"></input>
             </form>
             <br>
@@ -31,7 +31,7 @@
     </table>
     </div>
   
-    <script type="text/javascript" src="/client/js/states.js"></script>
+    <script type="text/javascript" src="/client/js/info.js"></script>
     <script type="text/javascript" src='https://cdn.socket.io/socket.io-1.4.5.js'></script>
     <script>
       // Recupero l'elemento canvas e il constesto del canvas.
@@ -40,6 +40,11 @@
       var timer;  
       var players = [];  
       var nickname;
+
+      // Recupero gli stati possibili, il territorio cliccato e lo stato corrente.
+      var clientStates = playerState;
+      var currentLocation;
+      var currentState = clientStates.IDLE;
 
       // Per ogni stato in state creo una circonferenza invisibile di un certo raggio sul nome di ogni stato nella mappa.
      function initCircle() {
@@ -64,7 +69,7 @@
         initCircle();
         var count = 1000;
         timer = setInterval(function() {
-          count --;
+          count--;
           // Alterno il disegno dei cerchi e la rimozione per fare un effetto lampeggiante.
           if (count % 2 == 1) {
             for (var neighbors in state.neighbor) {
@@ -72,7 +77,7 @@
               states.forEach(neighborsState => {
                 if (neighborsState.name == state.neighbor[neighbors]) {
                   context.beginPath();
-                  context.globalAlpha = 1;
+                  context.globalAlpha = 0.5;
                   context.arc(neighborsState.x, neighborsState.y, neighborsState.radius/2, 0, 2 * Math.PI, false);
                   context.fillStyle = "red";
                   context.fill();                                            
@@ -97,19 +102,19 @@
           x: e.clientX,
           y: e.clientY
         };
-        var trovato = -1;
+        var trovato = 0;
+
         // Scorro gli stati.
         states.forEach(state => {
           // Se ho cliccato su uno stato allora continuo.
           if (isIntersect(pos, state)) {
+            currentLocation = state;
             console.log(state.neighbor);
             // Recupero i vicini dello stato cliccato.
             flashObject(state);
             trovato = 1;
-            break;
+            //possible_victims.addEventListener("click", socket.emit('attackPlayer', possible_victims[this]));
           }
-          else
-            trovato = 0;
         });
 
         // Se trovato è zero devo azzerare il timer.
@@ -126,6 +131,7 @@
 
       // Aggiungo quello che ricevo alla chat.
       var chatText = document.getElementById('chat-text');
+     
       socket.on('addToChat', function(data) {
         chatText.innerHTML += '<div>' + data + '</div>';
       });

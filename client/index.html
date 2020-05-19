@@ -10,7 +10,7 @@
       <div id='name-prompt-container'>
         <form id='name-form'>
           <input type='text' id='name-input' placeholder='Nickname'
-            autocomplete='off' />
+            autocomplete='off' required/>
           <button id='nick' form='nickname-form'>
             Inizia a giocare
           </button>
@@ -159,17 +159,26 @@
 
       var joinGame = function(e) {
         var nickname = boxInput.value;
-        console.log(nickname);
-        socket.emit("new player", {nick: nickname});
-        location.replace("./client/map.html");
+        if (nickname == "") {
+          alert("Devi inserire un nickname!");
+          return;
+        }
+        socket.emit("newPlayer", {nick: nickname});
       }
 
-      socket.on ('player-info', function(data) {
-        console.log(data.msg);
-        });
+      // Se ricevo questo vuol dire che sono stato accettato.
+      socket.on ('playerAccepted', function() {
+        location.replace("./client/map.html");
+      });
+
+      socket.on("nickNotAvailable", function() {
+        alert("Nickname già presente, sceglierne un altro.");
+        boxInput.value = "";
+      });
 
       socket.on ('full' , function() {
-        alert("Impossibile partecipare alla partita!\n Ci sono già quattro partecipanti oppure è iniziata!");
+        alert("Impossibile partecipare alla partita!\n Ci sono già quattro partecipanti oppure la partita è iniziata!");
+        location.replace("./client/index.html");
       });
 
       buttonID.onclick = function (e) {
