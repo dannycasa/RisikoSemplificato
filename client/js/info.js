@@ -587,31 +587,37 @@ const states = [
 const continents = [
   {
     name: 'America Settentrionale',
+    states: 9,
     bonus: 5
   },
 
   {
     name: 'America Meridionale',
+    states: 4,
     bonus: 2
   },
 
   {
     name: 'Europa',
+    states: 7,
     bonus: 5
   },
 
   {
     name: 'Africa',
+    states: 6,
     bonus: 3
   },
 
   {
     name: 'Asia',
+    states: 12,
     bonus: 7
   },
 
   {
     name: 'Oceania',
+    states: 4,
     bonus: 2
   }
 ];

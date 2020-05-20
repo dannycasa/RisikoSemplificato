@@ -180,7 +180,6 @@
       // Se ricevo questo messaggio vuol dire che la partità è già al completo.
       socket.on ('full' , function() {
         alert("Impossibile partecipare alla partita!\n Ci sono già quattro partecipanti oppure la partita è iniziata!");
-        //location.replace("./client/index.html");
         boxInput.value = "";
       });
 

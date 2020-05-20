@@ -1,4 +1,4 @@
-// Dependencies
+// Dipendenze
 var express = require('express');
 var http = require('http');
 var path = require('path');
@@ -14,8 +14,7 @@ app.use('/client', express.static(__dirname + '/client'));
 
 app.get('/', function(request, response) {
     response.sendFile(path.join(__dirname, '/client/index.html'));
-  });
-
+});
 
 // Inizializzo il server.
 server.listen(4040, function() {
@@ -31,21 +30,21 @@ let states = stateModule.statesList;              // La lista degli stati della 
 let continents = stateModule.continentsList;      // La lista dei continenti della mappa,
 let symbols = stateModule.symbolsList;            // La lista dei simboli,
 let playerState = stateModule.playerStateList;    // La lista dei possibili stati dei giocatori.
-let playerTurn;                                   // Indica di quale giocatore è il turno.
+let playerTurn = -1;                              // Indica di quale giocatore è il turno.
 
 // Costruttore Giocatori.
 var Player = function (number, color, nick, id) {
   var self  = {
-    id: id,
-    number: number,
-    color: color,
-    states: [],
-    symbols: [],
-    bonus: 0,
-    stateNumber: 0,
-    nickname: nick,
-    computationState: playerState.IDLE,
-    troop: 0
+    id: id,                               // Questo è l'id della socket del giocatore,
+    number: number,                       // Questo è il numero del giocatore (0, 1, 2, 3),
+    color: color,                         // Questo è il colore assegnato al giocatore,
+    states: [],                           // Questo è l'array degli stati che ha il giocatore attualmente,
+    symbols: [],                          // Questo è l'array di simboli che il giocatore ha pescato,
+    bonus: 0,                             // Questo è l'eventuale bonus dovuto alla conquista di un intero continente,
+    stateNumber: 0,                       // Questo è il numero degli stati (utilizzato quando si fa l'assegnamento iniziale degli stati),
+    nickname: nick,                       // Questo è il nickname del giocatore,
+    computationState: playerState.IDLE,   // Questo è lo stato interno del giocatore, inizialmente IDLE e deve attendere l'ok del server,
+    troop: 0                              // Questo rappresenta le truppe che il server assegna ad inizio turno al client, considerando anche i bonus.
   }
 
   Player.list[number] = self;
@@ -54,10 +53,12 @@ var Player = function (number, color, nick, id) {
 
 Player.list = {};
 
+// Funzione che viene chiamata quando un giocatore si disconnette per rimuoverlo dalla lista dei giocatori.
 Player.onDisconnect = function (sockID) {
   delete Player.list[sockID];
 }
 
+// Funzione che raccoglie tutte le informazioni dei giocatori in un array (viene utilizzata poi dalla funzione update()).
 Player.update = function(socket) {
   var infoGiocatori = [];
   for (var i in Player.list) {
@@ -125,7 +126,7 @@ Player.assignStatePlayers = function () {
     // Recupero il player corrente e gli dico quanti stati gli do.
     var player = Player.find(num);
 
-    // Se siamo 4 giocatori e il giocatore è uno dei fortunati avrà uno stato in più.
+    // Se siamo 4 giocatori e il giocatore è uno dei 'fortunati' avrà uno stato in più.
     if (player.number == player1 || player.number == player2) {
       player.stateNumber = number + 1;
     }
@@ -148,7 +149,7 @@ Player.assignStatePlayers = function () {
           states[s].owner = player.nickname;
           assigned = 1;
         }
-
+        // Altrimenti cerco un altro stato.
         else {
           s = Math.floor(Math.random() * states.length);
         }
@@ -159,7 +160,7 @@ Player.assignStatePlayers = function () {
 
 // Funzione per cambiare il turno, changed indica se devo cambiare turno, playerState indica lo stato in cui devo muovere il player.
 Player.changeTurn = function(changed, pState, player) {
-  // Modifico il turno.
+  // Modifico il turno, utilizzando la funzione modulo.
   if (changed) {
     playerTurn = (playerTurn + 1) % playerNumber;
   }
@@ -168,7 +169,7 @@ Player.changeTurn = function(changed, pState, player) {
     var p = Player.list[i];
 
     // Se è cambiato il turno e sono il giocatore designato allora il mio stato diventa ASSIGN.
-    if (changed && p.number == playerTurn) {
+    if ((changed) && (p.number == playerTurn)) {
       p.computationState = playerState.ASSIGN;
       // Do le truppe che gli spettano al mio giocatore.
       p.troop = Math.floor(p.states.length / 3) + p.state.bonus;
@@ -220,39 +221,39 @@ Player.countSymbol = function(symbol, player, array) {
   // Se cerchiamo due elementi uguali ed uno diverso.
   else if (symbol == symbols.Jolly) {
     // Se voglio la combinazione due cannoni e un fante.
-    if ((array[0] == symbols.Cannone) && array[1] == symbols.Fante) {
+    if ((array[0] == symbols.Cannone) && (array[1] == symbols.Fante)) {
       if ((countCannoni >=2) && (countFanti != 0)) {
         return true;
       }
     }
     // Se voglio la combinazione due cannoni e un cavaliere.
-    else if ((array[0] == symbols.Cannone) && array[1] == symbols.Cavaliere) {
+    else if ((array[0] == symbols.Cannone) && (array[1] == symbols.Cavaliere)) {
       if ((countCannoni >=2) && (countCavalieri != 0)) {
         return true;
       }
     }
 
     // Se voglio la combinazione due fanti e un cannone.
-    else if ((array[0] == symbols.Fante) && array[1] == symbols.Cannone) {
+    else if ((array[0] == symbols.Fante) && (array[1] == symbols.Cannone)) {
       if ((countFanti >=2) && (countCannoni != 0)) {
         return true;
       }
     }
     // Se voglio la combinazione due fanti e un cavaliere.
-    else if ((array[0] == symbols.Fante) && array[1] == symbols.Cavaliere) {
+    else if ((array[0] == symbols.Fante) && (array[1] == symbols.Cavaliere)) {
       if ((countFanti >=2) && (countCavalieri != 0)) {
         return true;
       }
     }
 
     // Se voglio la combinazione due cavalieri e un cannone.
-    else if ((array[0] == symbols.Cavaliere) && array[1] == symbols.Cannone) {
+    else if ((array[0] == symbols.Cavaliere) && (array[1] == symbols.Cannone)) {
       if ((countCavalieri >=2) && (countCannoni != 0)) {
         return true;
       }
     }
     // Se voglio la combinazione due cavaliere e un fante.
-    else if ((array[0] == symbols.Cavaliere) && array[1] == symbols.Fante) {
+    else if ((array[0] == symbols.Cavaliere) && (array[1] == symbols.Fante)) {
       if ((countCavalieri >=2) && (countFanti != 0)) {
         return true;
       }
@@ -263,9 +264,10 @@ Player.countSymbol = function(symbol, player, array) {
   return false;
 }
 
+// Funzione per rimuovere i simboli, evito molti controlli perchè dalla precedente funzione sono sicuro che il giocatore ne è in possesso.
 Player.removeSymbol = function(symbol, player, array) {
   // Se devo rimuovere un tris di simboli.
-  if ((symbol == symbols.Cannone) || (symbol == symbols.Cannone) || (symbol == symbols.Cannone)) {
+  if ((symbol == symbols.Cannone) || (symbol == symbols.Fante) || (symbol == symbols.Cavaliere)) {
     for (var i = 0; i < 3; i++) {
       for (var s = 0; s < player.symbols.length; s++) {
         if (player.symbols[s] == symbol) {
@@ -313,6 +315,62 @@ Player.removeSymbol = function(symbol, player, array) {
   }
 }
 
+// Funzione per calcolare il bonus del player del player dato.
+Player.countBonus = function(player) {
+  var countAmericaSettentrionale = 0;
+  var countAmericaMeridionale = 0;
+  var countEuropa = 0;
+  var countAfrica = 0;
+  var countAsia = 0;
+  var countOceania = 0;
+
+  var totalBonus = 0;
+
+  // Conto quanti stati per ogni continente ha il giocatore.
+  for (var i in player.states) {
+    var continent = player.states[i].continent;
+  
+    if (continent == continents.find(item=>item.name=='America Settentrionale'))
+      countAmericaSettentrionale++;
+
+    else if (continent == continents.find(item=>item.name=='America Meridionale'))
+      countAmericaMeridionale++;
+
+    else if (continent == continents.find(item=>item.name=='Europa'))
+      countEuropa++;
+
+    else if (continent == continents.find(item=>item.name=='Africa'))
+      countAfrica++;
+
+    else if (continent == continents.find(item=>item.name=='Asia'))
+      countAsia++;
+
+    else if (continent == continents.find(item=>item.name=='Oceania'))
+      countOceania++;
+  }
+
+  if (countAmericaSettentrionale == continents.find(item=>item.name=='America Settentrionale'))
+    totalBonus += continents.find(item=>item.name=='America Settentrionale').bonus;
+
+  else if (countAmericaMeridionale == continents.find(item=>item.name=='America Meridionale'))
+    totalBonus += continents.find(item=>item.name=='America Meridionale').bonus;
+
+  else if (countEuropa == continents.find(item=>item.name=='Europa'))
+    totalBonus += continents.find(item=>item.name=='Europa').bonus;
+
+  else if (countAfrica == continents.find(item=>item.name=='Africa'))
+    totalBonus += continents.find(item=>item.name=='Africa').bonus;
+
+  else if (countAsia == continents.find(item=>item.name=='Asia'))
+    totalBonus += continents.find(item=>item.name=='Asia').bonus;
+
+  else if (countOceania == continents.find(item=>item.name=='Oceania'))
+    totalBonus += continents.find(item=>item.name=='Oceania').bonus;
+  
+  // Assegno il bonus al giocatore.
+  player.bonus = totalBonus;
+}
+
 // Questa è la funzione che invia i nuovi valori dei giocatori ai client in modo che sia tutto sincronizzato.
 function update() {
   var infoGiocatori = Player.update();
@@ -325,6 +383,7 @@ function update() {
   }
 }
 
+// Gestione della comunicazione sulla socket.
 io.on('connection', function(socket) {
   // Ad ogni connessione, do un id alla socket e la aggiungo alla lista delle socket.
   socket.id = Math.random();
@@ -332,16 +391,15 @@ io.on('connection', function(socket) {
   SOCKET_LIST[socket.id] = socket;
   
   console.log('New Connection ' + socketID);
-
-  // Viene richiamata quando un giocatore si registra alla partita.
+  
+  // Viene richiamata quando client, cioè un giocatore si registra alla partita.
   socket.on('newPlayer', function(data) {
-    // Se ci sono già 2 giocatori o la partita è iniziata.
+    // Se ci sono già 2/4 giocatori o la partita è iniziata.
     if (playerNumber == 2 || started) {
       // Dico al client che siamo al completo.
       socket.emit("full");
       return;
     }
-
     var nickname = data;
   
     // Se non c'è già un giocatore con il nick inserito.
@@ -353,22 +411,23 @@ io.on('connection', function(socket) {
       // Dico al client che è stato accettato.
       socket.emit('playerAccepted');
 
-      // Se ci sono due giocatori assegno gli stati e pongo started a true.
+      // Se ci sono due giocatori assegno gli stati, l'eventuale bonus e pongo started a true.
       if (playerNumber == 2) {
         Player.assignStatePlayers();
+        for (var i in Player.list) {
+          Player.countBonus(Player.list[i]);
+        }
         started = true;
-
-        // Mi riposo per 3 secondi così do il tempo all'ultimo client di caricare la pagina.
-        setTimeout(null, 3000);
-
-        // Dico ai giocatori che è iniziato la partita e passo il nickname del giocatore che deve iniziare.
+////////////////////////////////////////////////////////////////////    forse non c'è bisogno    \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+        // Dico ai giocatori che è iniziata la partita e passo il nickname del giocatore che deve iniziare.
         socket.emit("started", Player.find(0).nickname);
         
         // Cambio lo stato del primo giocatore in ASSIGN. e tutti gli altri in WAITER.
-        Player.changeTurn(false, playerState.ASSIGN, player);
+        Player.changeTurn(true, playerState.ASSIGN, player);
         update();
       }
 
+///////////////////////////////////////////////////////////     anche questa potrebbe essere superflua \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
       // Invio il nick del giocatore così ogni client sa chi è lui nella lista player.
       socket.emit("playerInfo", nickname);
     }
@@ -386,7 +445,7 @@ io.on('connection', function(socket) {
     // Se la combinazione è corretta e il giocatore ne è in possesso.
     if ((symbols.includes(combination)) && Player.countSymbol(combination, player, array)) {
       // Aggiungo le truppe al giocatore e rimuovo i simboli.
-      player.troops = player.troops + symbols[combination];
+      player.troops += symbols[combination];
       Player.removeSymbol(combination, player, array);
       var update = Player.update();
 
@@ -394,6 +453,7 @@ io.on('connection', function(socket) {
       socket.emit('update', update);
     }
 
+    // Altrimenti dico che non si hanno i simboli richiesti.
     else {
       socket.emit('error', 'noSymbol');
     }
@@ -405,11 +465,10 @@ io.on('connection', function(socket) {
     var player = Player.found(data.player);
     //var troop = data.troop;
     var state = data.state;
-
     var state1 = states.find(item=>item.name==state);
 
     // Se il player che mi ha mandato la richiesta è l'effettivo possessore dello stato e il suo stato è ASSIGN.
-    if (player.nickname == state.owner && player.computationState == playerState.ASSIGN) {
+    if ((player.nickname == state.owner) && (player.computationState == playerState.ASSIGN)) {
       // Aggiungo il carro armato.
       state1.troops++;
       player.troops--;
@@ -422,8 +481,8 @@ io.on('connection', function(socket) {
       update();
     }
 
-    // Il giocatore non può assegnare truppe. Non è il suo momento.
-    else if (player.computationState != playerState.ASSIGN) {
+    // Il giocatore non può assegnare le truppe. Non è il suo momento.
+    else if ((player.nickname == state.owner) && (player.computationState != playerState.ASSIGN)) {
       socket.emit("error", "noTurn");
     }
 
@@ -433,30 +492,28 @@ io.on('connection', function(socket) {
     }
   });
 
-  // Se ricevo questo messaggio il giocatore vuole effettuare un attacco.
+  // Viene richiamata quando un giocatore vuole effettuare un attacco.
   socket.on('attackPlayer', function(data) {
     var attacker = Player.find(data.attacker);
     var defender = Player.find(data.defender);
     var troops = data.troop;
-    var attackerState = data.state1;
-    var defenderState = data.state2;
+    var attackerState = states.find(item=>item.name==data.state1);
+    var defenderState = states.find(item=>item.name==data.state2);
 
-    var state1 = states.find(item=>item.name==attackerState);
-    var state2 = states.find(item=>item.name==defenderState);
-
-    // Controllo che lo stato che sta attaccando sia effettivamente dell'attaccante 
-    // e che lo stato che sta difendendo sia effettivamente del difensore.
-    if ((attacker.nickname == state1.owner) && (defender.nickname == state2.owner) && attacker.computationState == playerState.ATTACK) {
-      // Controllo che sia lo stato che attacca che quello che difende abbiano abbastanza truppe.      
-      if ((state1.troop > troops) && (state2.troop >= troops)) {
+    // Controllo che lo stato che sta attaccando sia effettivamente dell'attaccante, che lo stato che sta difendendo sia effettivamente 
+    // del difensore e che l'attaccante possa effettivamente attaccare.
+    if ((attacker.nickname == attackerState.owner) && (defender.nickname == defenderState.owner) && (attacker.computationState == playerState.ATTACK)) {
+      // Controllo che sia lo stato che attacca che quello che difende abbiano abbastanza truppe. 
+      // Allo stato attaccante deve rimanere almeno un carro armato nel territorio, lo stato difensore invece può schierare tutte le truppe.     
+      if ((attackerState.troop > troops) && (defenderState.troop >= troops)) { 
         // Creo e riempio gli array che contengono il lancio dei dadi.
         var attackerDice = [];
         var defenderDice = [];
 
         // Simulo il lancio dei dadi per le volte necessarie.
         for (var i = 0; i < troops; i++) {
-          attackerDice[i] = Math.round(Math.random() * 5) + 1;
-          defenderDice[i] = Math.round(Math.random() * 5) + 1;
+          attackerDice[i] = Math.round(Math.random() * 6) + 1;
+          defenderDice[i] = Math.round(Math.random() * 6) + 1;
         }
 
         // Ordino gli array in ordine decrescente.
@@ -467,52 +524,80 @@ io.on('connection', function(socket) {
           return b - a;
         });
 
+        // Conto gli scontri vinti dall'attaccante
         var clashesWon = 0;
         // Controllo chi vince gli scontri.
         for (var i = 0; i < troop; i++) {
+          // Il numero deve essere strettamente maggiore, altrimenti vince la difesa.
           if (attackerDice[i] > defenderDice[i])
             clashesWon++;
         }
 
-        // Se l'attaccante vince tutti gli scontri.
-        if (clashesWon == troop) {
-          // In questo caso l'attaccante ha conquistato lo stato.
-          if (state2.troop == troop) {
-            state2.owner = attacker.nickname;
+        // Se l'attaccante vince tutti gli scontri e lo stato difensore rimane senza truppe.
+        if ((clashesWon == troop) && (defenderState.troop == troop)) {
+          // Cambio il possessore dello stato, aggiungo tale stato alla lista degli stati dell'attaccante e azzero le truppe presenti.
+          defenderState.owner = attacker.nickname;
+          attacker.states.push(defenderState);
+          defenderState.troops = 0;
+          attacker.stateNumber++;
 
-            // Pesco una carta simbolo.
-            var index = Math.round(Math.random() * 4);
-            attacker.symbol.push[symbols[index]];
+          // Tolgo lo stato dalla lista degli stati del giocatore che difendeva.
+          delete defender.states[defenderState];
+          defender.stateNumber--;
 
-            // Avviso l'attaccante che ha conquistato lo stato.
-            socket.emit("stateWon", {
-              name: defenderState,
-              symbol: symbols[index]
-            });
+          // Verifico se devo modificare i bonus dei giocatori.
+          Player.countBonus(attacker);
+          Player.countBonus(defender);
 
-            // Avviso il difensore che ha perso lo stato.
-            var sock = defender.id;
-            SOCKET_LIST[sock].emit("stateLost", {
-              name: defenderState,
-              player: attacker
-            })
+          // Pesco una carta simbolo.
+          var index = Math.round(Math.random() * 5);
+          var j = 0;
+          for (var i in symbols) {
+            symbol = symbols[i];
+            if (j == index) {
+              // e la aggiungo a quelle del giocatore.
+              attacker.symbols.push[symbol];
+            }
+            else
+              j++;
           }
+        
+          // Avviso l'attaccante che ha conquistato lo stato.
+          socket.emit("stateWon", {
+            name: defenderState.name,
+            symbol: symbols[index]
+          });
+
+          // Avviso il difensore che ha perso lo stato.
+          var sock = defender.id;
+          SOCKET_LIST[sock].emit("stateLost", {
+            name: defenderState,
+            player: attacker
+          })
         }
 
         // Altrimenti l'attacco è fallito.
         else {
           // In questo caso lo stato resta al possessore.
           socket.emit("stateNotWon", {
-            player: defender,
+            player: defender.nickname,
             battleWon: clashesWon,
             totalBattle: troop,
-            name: defenderState
+            name: defenderState.name
+          });
+
+          var sock = defender.id;
+          SOCKET_LIST[sock].emit("stateNotWon", {
+            player: defender.nickname,
+            battleWon: clashesWon,
+            totalBattle: troop,
+            name: defenderState.name
           });
         }
 
         // Aggiorno le truppe degli stati.
-        state1.troop = state1.troop - (troops - clashesWon);
-        state2.troop = state2.troop - clashesWon;
+        attackerState.troop = attackerState.troop - (troops - clashesWon);
+        defenderState.troop = defenderState.troop - clashesWon;
 
         // Aggiorno i client.
         update();
@@ -524,44 +609,52 @@ io.on('connection', function(socket) {
       }
     }
 
-    // Il giocatore non può spostare truppe. Non è il suo momento.
-    else if (player.computationState != playerState.MOVE) {
+    // Il giocatore non può attaccare. Non è il suo momento.
+    else if ((attacker.nickname == attackerState.owner) && (defender.nickname == defenderState.owner) && (player.computationState != playerState.ATTACK)) {
       socket.emit("error", "noTurn");
     }
 
-    // Altrimenti non possiede almeno uno dei due territori.
+    // Altrimenti non possiede il suo territorio.
     else {
       socket.emit("error", "attack");    
     }
   });
 
   // Se ricevo questo messaggio vuol dire che il client ha terminato di attaccare.
-  socket.on('endAttack' , function(data) {
+  socket.on('endAttack' , function() {
     // Cambio il suo stato e aggiorno tutti.
-    changeTurn(false, playerState.MOVE, player);
-    update();
+    if (player.computationState == playerState.ATTACK) {
+      changeTurn(false, playerState.MOVE, player);
+      update();
+    }
+
+    // Non è il turno del giocatore.
+    else {
+      socket.emit("error", "noTurn");
+    }
   });
 
   // Viene richiamata quando un client vuole spostare truppe da un territorio all'altro.
   socket.on('moveTroops', function(data) {
     var player = Player.found(data.player);
-    var initialState = data.state1;
-    var endState = data.state2;
+    var initialState = states.find(item=>item.name==data.state1);
+    var endState = states.find(item=>item.name==data.state2);
     var troops = data.troop;
-
-    var state1 = states.find(item=>item.name==initialState);
-    var state2 = states.find(item=>item.name==endState);
+    var stateWon = data.won;
 
     // Se il player che mi ha mandato la richiesta è il possessore di entrambi i territori ed è il turno di spostare.
-    if ((player.nickname == state1.owner) && (player.nickname == state2.owner) && (player.computationState == playerState.MOVE)) {
+    // Oppure il player è il possessore dei territori ed ha appena conquistato un territorio.
+    if (((player.nickname == initialState.owner) && (player.nickname == endState.owner)) && ((player.computationState == playerState.MOVE) || (stateWon))) {
       // Se il territorio di partenza ha effettivamente tali truppe e il giocatore lascia almeno un carro armato.
       if (state1.troop > troops) {
         state1.troop = state1.troop - troops;
         state2.troop = state2.troop + troops;
         socket.emit("movedTroops");
 
-        // Se lo spostamento va a buon fine devo iniziare un nuovo turno.
-        changeTurn(true, playerState.WAITER, player);
+        if (!stateWon) {
+          // Se lo spostamento va a buon fine devo iniziare un nuovo turno.
+          changeTurn(true, playerState.WAITER, player);
+        }
         update();
 
       }
