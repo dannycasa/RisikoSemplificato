@@ -447,8 +447,6 @@ io.on('connection', function(socket) {
         break;
       }
     }
-    // Adesso modifico l'array SOCKETLIST.
-    delete SOCKET_LIST[sock];
   });
 
   // Viene richiamata quando un client vuole scambiare le sue carte simbolo.
@@ -747,3 +745,15 @@ io.on('connection', function(socket) {
     socket.emit('evalAnswer',res);
   });
 });
+
+setInterval ( function() {
+  console.log("SOCKETLIST");
+  for (var i in SOCKET_LIST) {
+    console.log(SOCKET_LIST[i].id);
+  }
+  console.log("\nPLAYERLIST");
+  for (var i in Player.list) {
+    console.log(Player.list[i].id);
+  }
+  console.log("");
+}, 10000)

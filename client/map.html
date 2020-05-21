@@ -345,6 +345,9 @@
             playerTurn.innerHTML += '<div style="color:' + players[i].color +'">' + players[i].nickname + ', al momento sta assegnando le truppe. </div>';
             playerSuggestions.innerHTML += '<div>' + suggestions.ASSIGN + '</div>';
 
+            if(players[i].nickname == nickname)
+              playerTurn.innerHTML += '<div style="color:' + players[i].color +'> Ti rimangono ' + players[i].troop + ' da assegnare. </div>';
+
             // Verifico se devo inserire i bottoni per lo scambio delle truppe.
             if (countCannoni >= 3) 
               playerActions.innerHTML += "<button onclick=exchangeFunction(symbols.Cannone, null)'>Scambia tre Cannoni per 4 truppe.</button>";
