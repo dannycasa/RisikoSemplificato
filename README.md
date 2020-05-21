@@ -33,19 +33,21 @@ Per l'utilizzo:
   
   dopo aprire il browser ed andare sulla pagina http://localhost:4040/.
 
-Durante lo svolgimento del gioco, il giocatore riceve delle informazioni dal server. Esso mostretà:
+Durante lo svolgimento del gioco, il giocatore riceve delle informazioni dal server. Esso mostrerà:
 
-il proprio nickname;
+      il proprio nickname;
 
-la lista dei giocatori partecipanti alla partita;
+      la lista dei giocatori partecipanti alla partita;
 
-il giocatore che è in turno e cosa sta facendo;
+      il giocatore che è in turno e cosa sta facendo;
 
-le carte simbolo disponibili al giocatore;
+      le carte simbolo disponibili al giocatore;
 
-le azioni possibili del giocatore (se è in fase di assegnazione delle truppe ad inizio turno può ad esempio scambiare le carte simbolo con delle truppe, se è in fase di attacco può terminare la fase di attacco oppure se il giocatore è in fase di spostamento può scegliere di non effettuarlo);
+      le azioni possibili del giocatore (se è in fase di assegnazione delle truppe ad inizio turno può ad esempio 
+      scambiare le carte simbolo con delle truppe, se è in fase di attacco può terminare la fase di attacco oppure 
+      se il giocatore è in fase di spostamento può scegliere di non effettuarlo);
 
-alcuni suggerimenti per il giocatore in base al suo stato corrente.
+      alcuni suggerimenti per il giocatore in base al suo stato corrente.
 
 
 
