@@ -156,9 +156,10 @@
       var boxForm = document.getElementById("nickname-form");
       var buttonID = document.getElementById("nick");
       var socket = io(); 
+      var nickname;
 
       var joinGame = function(e) {
-        var nickname = boxInput.value;
+        nickname = boxInput.value;
         if (nickname == "") {
           alert("Devi inserire un nickname!");
           return;
@@ -167,8 +168,8 @@
       }
 
       // Se ricevo questo messaggio vuol dire che sono stato accettato.
-      socket.on ('playerAccepted', function() {
-        location.replace("./client/map.html");
+      socket.on ('playerAccepted', function(data) {
+        location.replace("./client/map.html?nickname=" + nickname);
       });
 
       // Se ricevo questo messaggio vuol dire che c'è già un giocatore con il nickname inserito.

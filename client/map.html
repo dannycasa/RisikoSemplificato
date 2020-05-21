@@ -13,26 +13,41 @@
             <canvas id="map" width="1296" height="729" style="background-image: url('/client/img/mappa.jpg'); border:1px solid #000000;"></canvas>
           </td>
           <td>
+            <div>
+              <div id="playerNickname"> </div>
+              <div id="playerlist" width="350px" heigth="100px" style="border:1px solid #000000;">
+                <div>Nome giocatori:</div>
+              </div>
+              <br>
+              <div id="playerTurn" widht="350px" height="1000px" style="border:1px solid #000000;">
+                <div>Turno del giocatore:</div>
+              </div>
+              <br>
+              <div id="playerSymbols" widht="350px" height="1000px" style="border:1px solid #000000;">
+                <div>Carte simbolo del giocatore:</div>
+              </div>
+              <br>
+              <div id="playerActions" widht="350px" height="1000px" style="border:1px solid #000000;">
+                <div>Possibili azioni del giocatore:</div>
+              </div>
+              <br>
+              <div id="playerSuggestions" widht="350px" height="1000px" style="border:1px solid #000000;">
+                <div>Suggerimenti al giocatore:</div>
+              </div>
+            </div>
+            <br>
             <div id="chat-text" style="width:350px;height:100px;overflow-y:scroll">
-              <div>Hello!</div>
+              <div>Connesso alla chat!</div>
             </div>
             <form id="chat-form" onsubmit="formFunction(); return false">
               <input id="chat-input" type="text" style="width:350px"></input>
             </form>
-            <br>
-            <div>
-              Nome giocatori:
-              <div id="playerlist" width="350px" style="border:1px solid #000000;"></div>
-              Turno del giocatore:
-              <div id="playerTurn" widht="350px" style="border:1px solid #000000;"></div>
-            </div>
-            <br>
           </td>
           
         </tr>
     </table>
     </div>
-  
+    <script>var exports = {};</script>
     <script type="text/javascript" src="/client/js/info.js"></script>
     <script type="text/javascript" src='https://cdn.socket.io/socket.io-1.4.5.js'></script>
     <script>
@@ -41,20 +56,30 @@
       var context = canvas.getContext("2d");    
       var timer;  
       var players = [];  
-      var nickname;
+
+      // Recupero il mio nickname tramite URL.
+      var ref = window.location.href;
+      var url = ref.split("=");
+      var nickname = url[1];
+      document.getElementById('playerNickname').innerHTML += "<h3> Il tuo nickaname è "+ nickname +"</h3>";
+
 
       // Aggiungo quello che ricevo alla chat.
       var chatText = document.getElementById('chat-text');
       var playerList = document.getElementById('playerList');
       var playerTurn = document.getElementById('playerTurn');
+      var platerSymbols = document.getElementById('playerSymbols');
+      var playerActions = document.getElementById('playerActions');
+      var playerSuggestions = document.getElementById('playerSuggestions');
 
       // Recupero gli stati possibili, il territorio cliccato e lo stato corrente.
       var clientStates = playerState;
       var currentLocation;
       var currentState = clientStates.IDLE;
 
+
       // Per ogni stato in state creo una circonferenza invisibile di un certo raggio sul nome di ogni stato nella mappa.
-     function initCircle() {
+      function initCircle() {
         states.forEach(state => {
           context.beginPath();
           context.globalAlpha = 0.0;
@@ -174,6 +199,9 @@
       });
       
       var socket = io();
+      
+      // Avviso il server che da ora deve comunicare con me tramite questa socket.
+      socket.emit('newSocket', nickname);
      
       // Aggiungo il messaggio ricevuto alla chat.
       socket.on('addToChat', function(data) {
@@ -183,11 +211,6 @@
       // Utilizzo per debug. Ad esempio inserendo in chat /Player.list avrò la lista dei giocatori nella console.
       socket.on('evalAnswer', function(data) {
         console.log(data);
-      });
-
-      // Mi salvo il mio nickname.
-      socket.on('playerInfo', function(data) {
-        nickname = data;
       });
 
       // Gestisce un messaggio di errore mostrando un alert dedicato.
@@ -201,6 +224,8 @@
           alert("Non possiedi abbastanza truppe. \n Lo stato di partenza deve rimanere almeno con un carro armato.");
         else if (type == 'noTurn')
           alert("Non è il tuo turno. \n Attendi che ti avvisi il server.");
+        else if(type == 'noNeighbor')
+          alert("I due stati non sono confinanti.");
       });
       
       // Il server mi sta inviando le nuove informazioni da mostrare.
@@ -209,6 +234,11 @@
         context.clearRect(0, 0, canvas.width, canvas.height);
         initCircle();
         players = data; 
+        playerList.empty();
+        playerTurn.empty();
+        playerSymbols.empty();
+        playerSuggestions.empty();
+        playerActions.empty();
 
         // Disegno le nuove informazioni.  
         update();
@@ -245,6 +275,24 @@
         alert("Peccato, hai perso tutti gli scontri contro " + player + " e perso lo stato " + name + ".");
       });      
 
+      // Funzione per terminare la fase di attacco.
+      endAttackFunction = function() {
+        socket.emit('endAttack');
+      }
+
+      // Funzione per terminare la fase di spostamento.
+      endMoveFunction = function() {
+        socket.emit('endMove');
+      }
+
+      // Funzione per scambiare le carte simbolo per carri armati.
+      exchangeFunction = function(symbolType, array) {
+        socket.emit('exchangeSymbol', {
+          combination: symbolType,
+          array: array
+        });
+      }
+
       // Funzione che viene richiamata quando viene premuto enter nell'input della chat.
       formFunction = function() {
         // Recupero gli elementi di chat.
@@ -263,8 +311,6 @@
 
       // Funzione che aggiorna le informazioni sullo schermo dei client.
       update = function() {
-        playerList.empty();
-        playerTurn.empty();
         for (var i = 0; i < players.lenght; i++) {
           for (var j = 0; j < players[i].states.lenght; j++) {
             states.forEach(state => {
@@ -277,16 +323,85 @@
               }
             });
           }
-          // Aggiorno sia la lista dei giocatori (in realtà basterebbe farlo solo la prima volta), il giocatore che ha il turno e cosa sta facendo.
+          // Se mi riconosco aggiorno il mio stato.
+          if(players[i].nickname == nickname)
+            currentState = players[i].computationState;
+
+          // Aggiorno la lista dei giocatori.
           playerList.innerHTML += '<div style="color:' + players[i].color +'">' + players[i].nickname + '</div>';
 
-          if (players[i].computationState != clientStates.WAITER && players[i].computationState != clientStates.IDLE) {
-            if (players[i].computationState == clientStates.ASSIGN)
-              playerTurn.innerHTML += '<div style="color:' + players[i].color +'">' + players[i].nickname + ', al momento sta assegnando le truppe. </div>';
-            else if (players[i].computationState == clientStates.ATTACK)
-              playerTurn.innerHTML += '<div style="color:' + players[i].color +'">' + players[i].nickname + ', al momento sta decidendo se fare un attacco. </div>';
-            else if (players[i].computationState == clientStates.MOVE)
-              playerTurn.innerHTML += '<div style="color:' + players[i].color +'">' + players[i].nickname + ', al momento sta effettuando lo spostamento finale. </div>';
+          // Aggiorno la lista delle carte simbolo del giocatore.
+          var count = (input, arr) => arr.filter(x => x == input).length;
+          countCannoni = count(symbols.Cannone, player.symbols);
+          countFanti = count(symbols.Fante, player.symbols);
+          countCavalieri = count(symbols.Cavaliere, player.symbols);
+
+          playerSymbols.innerHTML += "<div>" + countCannoni + "</div>";
+          playerSymbols.innerHTML += "<div>" + countFanti + "</div>";
+          playerSymbols.innerHTML += "<div>" + countCavalieri + "</div>";
+
+          // Aggiorno il client di cosa sta facendo il giocatore in turno, la sezione suggerimenti per ogni mossa e la sezione azioni possibili.
+          if (players[i].computationState == clientStates.ASSIGN) {
+            playerTurn.innerHTML += '<div style="color:' + players[i].color +'">' + players[i].nickname + ', al momento sta assegnando le truppe. </div>';
+            playerSuggestions.innerHTML += '<div>' + suggestions.ASSIGN + '</div>';
+
+            // Verifico se devo inserire i bottoni per lo scambio delle truppe.
+            if (countCannoni >= 3) 
+              playerActions.innerHTML += "<button onclick=exchangeFunction(symbols.Cannone, null)'>Scambia tre Cannoni per 4 truppe.</button>";
+            if (countFanti >= 3)
+              playerActions.innerHTML += "<button onclick=exchangeFunction(symbols.Fante, null)'>Scambia tre Fanti per 6 truppe.</button>";
+            if (countCavalieri >= 3)
+              playerActions.innerHTML += "<button onclick=exchangeFunction(symbols.Cavaliere, null)'>Scambia tre Cavalieri per 8 truppe.</button>";
+            if ((countCannoni > 0) && (countFanti > 0) && (countCavalieri > 0))
+              playerActions.innerHTML += "<button onclick=exchangeFunction(symbols.Diversi, null)'>Scambia un Cannone, un Fante e un Cavaliere per 10 truppe.</button>";
+            // Se è disponibile la combinazione due cannoni e un fante.
+            if ((countCannoni >=2) && (countFanti != 0)) {
+              var array = [symbols.Cannone, symbols.Fante];
+              playerActions.innerHTML += "<button onclick=exchangeFunction(symbols.Jolly," + array + ")'>Scambia due Cannoni e un Fante per 12 truppe.</button>";
+            }
+            // Se è disponibile la combinazione due cannoni e un cavaliere.
+            if ((countCannoni >=2) && (countCavalieri != 0)) {
+              var array = [symbols.Cannone, symbols.Cavaliere];
+              playerActions.innerHTML += "<button onclick=exchangeFunction(symbols.Jolly," + array + ")'>Scambia due Cannoni e un Cavaliere per 12 truppe.</button>";
+            }
+            // Se è disponibile la combinazione due fanti e un cannone.
+            if ((countFanti >=2) && (countCannoni != 0)) {
+              var array = [symbols.Fante, symbols.Cannone];
+              playerActions.innerHTML += "<button onclick=exchangeFunction(symbols.Jolly," + array + ")'>Scambia due Fanti e un Cannone per 12 truppe.</button>";
+            }
+            // Se è disponibile la combinazione due fanti e un cavaliere.
+            if ((countFanti >=2) && (countCavalieri != 0)) {
+              var array = [symbols.Fante, symbols.Cavaliere];
+              playerActions.innerHTML += "<button onclick=exchangeFunction(symbols.Jolly," + array + ")'>Scambia due Fanti e un Cavaliere per 12 truppe.</button>";
+            }
+            // Se è disponibile la combinazione due cavalieri e un cannone.
+            if ((countCavalieri >=2) && (countCannoni != 0)) {
+              var array = [symbols.Cavaliere, symbols.Cannone];
+              playerActions.innerHTML += "<button onclick=exchangeFunction(symbols.Jolly," + array + ")'>Scambia due Cavalieri e un Cannone per 12 truppe.</button>";
+            }
+            // Se è disponibile la combinazione due cavalieri e un fante.
+            if ((countCavalieri >=2) && (countFanti != 0)) {
+              var array = [symbols.Cavaliere, symbols.Fante];
+              playerActions.innerHTML += "<button onclick=exchangeFunction(symbols.Jolly," + array + ")'>Scambia due Cavalieri e un Fante per 12 truppe.</button>";
+            }
+          }
+          else if (players[i].computationState == clientStates.ATTACK) {
+            playerTurn.innerHTML += '<div style="color:' + players[i].color +'">' + players[i].nickname + ', al momento sta decidendo se fare un attacco. </div>';
+            playerSuggestions.innerHTML += '<div>' + suggestions.ATTACK + '</div>';
+            playerActions.innerHTML += "<button onclick=endAttackFunction()'>Termina fase di attacco</button>";
+          }
+          else if (players[i].computationState == clientStates.MOVE) {
+            playerTurn.innerHTML += '<div style="color:' + players[i].color +'">' + players[i].nickname + ', al momento sta effettuando lo spostamento finale. </div>';
+            playerSuggestions.innerHTML += '<div>' + suggestions.MOVE + '</div>';
+            playerActions.innerHTML += "<button onclick=endMoveFunction()'>Termina fase di spostamento</button>";
+          }
+          // Aggiorno la sezione suggerimenti dei giocatori in attesa e in stato idle.
+          else if (players[i].computationState == clientStates.WAITER) {
+            playerSuggestions.innerHTML += '<div>' + suggestions.WAITER + '</div>';
+          }
+
+          else if (players[i].computationState == clientStates.IDLE) {
+            playerSuggestions.innerHTML += '<div>' + suggestions.IDLE + '</div>';
           }
         }
       }
