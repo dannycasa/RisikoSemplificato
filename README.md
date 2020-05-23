@@ -59,3 +59,6 @@ Parti funzionanti:
             registrazione nel server e verifica presenza nickname,
             assegnamento stati ed inizializzazione corretta dei giocatori quando la partita inizia,
             chat tra i giocatori,
+            assegnamento truppe nei propri territori,
+            saltare fase di spostamento o terminare fase di attacco con il bottone,
+            fase di spostamento.
