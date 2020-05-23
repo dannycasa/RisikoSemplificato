@@ -53,3 +53,9 @@ Durante lo svolgimento del gioco, il giocatore riceve delle informazioni dal ser
 
 Inoltre è possibile scrivere in una chat alla quale sono connessi tutti i partecipanti.
 
+
+Parti funzionanti:
+
+            registrazione nel server e verifica presenza nickname,
+            assegnamento stati ed inizializzazione corretta dei giocatori quando la partita inizia,
+            chat tra i giocatori,
