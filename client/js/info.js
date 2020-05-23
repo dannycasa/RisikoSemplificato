@@ -657,8 +657,14 @@ const suggestions = {
   ASSIGN: 'Puoi assegnare le truppe nei tuoi territori cliccando sullo stato, ad ogni click corrisponde un carro armato assegnato. Puoi anche guardare la sezione "Possibili azioni del giocatore" per verificare se puoi scambiare carte simbolo per avere più carri armati.',
   ATTACK: 'Puoi attaccare gli stati nemici con i tuoi, nota che uno stato per poter essere attaccato deve essere confinante al tuo. Una volta terminata la fase di attacco clicca sul bottone "Termina fase di attacco" nella sezione "Possibili azioni del giocatore". Se conquisti un territorio hai diritto ad uno spostamento dal territorio di attacco a quello conquistato. Ricorda che deve rimanere almeno un carro armato a difendere ogni tuo stato.',
   MOVE: 'Puoi spostare le truppe da un tuo stato ad un altro se tali stati sono confinanti. Puoi effettuare un solo spostamento ogni turno. Lo spostamento non è obbligatorio, infatti si può cliccare sul bottone "Termina fase di spostamento" nella sezione "Possibili azioni del giocatore". Lo spostamento determina la fine del turno.',
-  WAITING: 'Non è il tuo turno, un altro giocatore sta effettuando le proprie mosse.',
+  WAITER: 'Non è il tuo turno, un altro giocatore sta effettuando le proprie mosse.',
   IDLE: 'Sei correttamente registrato nel sistema, attendi il via libera del server.'
+}
+
+const firstTroopAssignment = {
+  2: 40,
+  3: 35,
+  4: 30
 }
 
  exports.statesList = states;
@@ -666,3 +672,4 @@ const suggestions = {
  exports.symbolsList = symbols;
  exports.colorsList = colors;
  exports.playerStateList = playerState;
+ exports.firstTroopAssignmentList = firstTroopAssignment;

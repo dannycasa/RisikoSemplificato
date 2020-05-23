@@ -30,7 +30,9 @@ let states = stateModule.statesList;              // La lista degli stati della 
 let continents = stateModule.continentsList;      // La lista dei continenti della mappa,
 let symbols = stateModule.symbolsList;            // La lista dei simboli,
 let playerState = stateModule.playerStateList;    // La lista dei possibili stati dei giocatori.
+let bonusFirstTurn = stateModule.firstTroopAssignmentList; // Lista del bonus di carri armati dati al primo turno.
 let playerTurn = -1;                              // Indica di quale giocatore è il turno.
+let firstTurn = true;                              // Indica se è il primo turno o no.
 
 // Costruttore Giocatori.
 var Player = function (number, color, nick, id) {
@@ -143,11 +145,11 @@ Player.assignStatePlayers = function () {
 
       // Finchè assegnato è 0, ho trovato solo stati già assegnati.
       while (assigned == 0) {
-        var state = states.slice(s,s+1);
         // Se lo stato non ha già un possessore glielo assegno.
-        if (state.owner == null) {
-          player.states.push(state);
+        if (states[s].owner == null) {
+          player.states.push(states[s]);
           states[s].owner = player.nickname;
+          states[s].troops = 0;
           assigned = 1;
         }
         // Altrimenti cerco un altro stato.
@@ -163,7 +165,10 @@ Player.assignStatePlayers = function () {
 Player.changeTurn = function(changed, pState, player) {
   // Modifico il turno, utilizzando la funzione modulo.
   if (changed) {
-    playerTurn = (playerTurn + 1) % playerNumber;
+    if(playerTurn + 1 == playerNumber) {
+      firstTurn = false;
+    }
+    playerTurn = (playerTurn + 1) % (playerNumber - 1);
   }
 
   for (var i in Player.list) {
@@ -174,6 +179,8 @@ Player.changeTurn = function(changed, pState, player) {
       p.computationState = playerState.ASSIGN;
       // Do le truppe che gli spettano al mio giocatore.
       p.troop = Math.floor(p.states.length / 3) + p.bonus;
+      if (firstTurn)
+        p.troop += bonusFirstTurn[playerNumber];
     }
 
     // Se non è cambiato il turno e sono il giocatore indicato allora il mio stato diventa quello passato come argomento.
@@ -183,7 +190,7 @@ Player.changeTurn = function(changed, pState, player) {
 
     // In ogni altro caso pongo/mantengo il mio stato in WAITER.
     else {
-      p.computationState == playerState.WAITER;
+      p.computationState = playerState.WAITER;
     }
   }
 }
@@ -375,12 +382,17 @@ Player.countBonus = function(player) {
 // Questa è la funzione che invia i nuovi valori dei giocatori ai client in modo che sia tutto sincronizzato.
 function update() {
   var infoGiocatori = Player.update();
-  for (var i in SOCKET_LIST) {
-    var socket = SOCKET_LIST[i];
-    socket.emit('update', {
-      player: infoGiocatori,
-      state: states
-    });
+  for (var i in Player.list) {
+    for(var j in SOCKET_LIST) {
+      if (Player.list[i].id == SOCKET_LIST[j].id) {
+        var socket = SOCKET_LIST[j];
+        socket.emit('update', {
+          player: infoGiocatori,
+          state: states
+        });
+        break;
+      }
+    }
   }
 }
 
@@ -408,26 +420,9 @@ io.on('connection', function(socket) {
       // Creo una variabile player e aumento il numero dei giocatori.
       var player = Player(playerNumber,colors[playerNumber],nickname, socketID);
       playerNumber++;
-      Player.assignStatePlayers();
 
       // Dico al client che è stato accettato.
       socket.emit('playerAccepted', nickname);
-
-      // Se ci sono due giocatori assegno gli stati, l'eventuale bonus e pongo started a true.
-      if (playerNumber == 2) {
-        Player.assignStatePlayers();
-        for (var i in Player.list) {
-          Player.countBonus(Player.list[i]);
-        }
-        started = true;
-////////////////////////////////////////////////////////////////////    forse non c'è bisogno    \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-        // Dico ai giocatori che è iniziata la partita e passo il nickname del giocatore che deve iniziare.
-        socket.emit("started", Player.find(0).nickname);
-        
-        // Cambio lo stato del primo giocatore in ASSIGN. e tutti gli altri in WAITER.
-        Player.changeTurn(true, playerState.ASSIGN, player);
-        update();
-      }
     }
 
     // Altrimenti dico che il nick è già preso.
@@ -438,15 +433,41 @@ io.on('connection', function(socket) {
 
   // Viene richiamata quando un client cambia pagina e quindi socket.
   socket.on('newSocket', function(data) {
-    var sock;
     // Inserisco nel player l'id della socket.
     for (var i in Player.list) {
       if (Player.list[i].nickname == data) {
-        sock = Player.list[i].id;
         Player.list[i].id = socketID;
         break;
       }
     }
+    console.log("cambio");
+    // Se ci sono due giocatori assegno gli stati, l'eventuale bonus e pongo started a true.
+    if (!started && playerNumber == 2) {
+      Player.assignStatePlayers();
+      for (var i in Player.list) {
+        Player.countBonus(Player.list[i]);
+      }
+      started = true;
+      
+      // Cambio lo stato del primo giocatore in ASSIGN. e tutti gli altri in WAITER.
+      Player.changeTurn(true, playerState.ASSIGN, null);
+      update();
+      console.log("inizio");
+      for (var p in Player.list) {
+        for(var i in SOCKET_LIST) {
+          if (Player.list[p].id == SOCKET_LIST[i].id) {
+            console.log (SOCKET_LIST[i].id);
+          }
+        }
+      }
+      console.log("fine");
+    }
+
+    for (var i in Player.list) 
+        console.log(Player.list[i].id);
+      console.log("");
+      for (var i in SOCKET_LIST) 
+        console.log(SOCKET_LIST[i].id);
   });
 
   // Viene richiamata quando un client vuole scambiare le sue carte simbolo.
@@ -473,23 +494,21 @@ io.on('connection', function(socket) {
   });
 
   // Viene richiamata quando un client vuole aggiungere truppe al suo territorio.
-  socket.on ('addTroops', function(data) {
-    var player = Player.found(data.player);
-    //var troop = data.troop;
-    var state = data.state;
-    var state1 = states.find(item=>item.name==state);
+  socket.on ('addTroop', function(data) {
+    var player = Player.find(data.player);
+    var state1 = states.find(item=>item.name==data.state);
 
     // Se il player che mi ha mandato la richiesta è l'effettivo possessore dello stato e il suo stato è ASSIGN.
-    if ((player.nickname == state.owner) && (player.computationState == playerState.ASSIGN)) {
+    if ((player.nickname == state1.owner) && (player.computationState == playerState.ASSIGN)) {
       // Aggiungo il carro armato.
       state1.troops++;
-      player.troops--;
-      socket.emit("troopAdded");
+      player.troop--;
 
       // Se ho finito di assegnare le truppe passo allo stato ATTACK.
-      if (player.troops == 0) {
+      if (player.troop == 0) {
         Player.changeTurn(false, playerState.ATTACK, player);
       }
+
       update();
     }
 
@@ -631,10 +650,11 @@ io.on('connection', function(socket) {
   });
 
   // Se ricevo questo messaggio vuol dire che il client ha terminato di attaccare.
-  socket.on('endAttack' , function() {
+  socket.on('endAttack' , function(data) {
+    var player = Player.find(data);
     // Cambio il suo stato e aggiorno tutti.
     if (player.computationState == playerState.ATTACK) {
-      changeTurn(false, playerState.MOVE, player);
+      Player.changeTurn(false, playerState.MOVE, player);
       update();
     }
 
@@ -646,7 +666,7 @@ io.on('connection', function(socket) {
 
   // Viene richiamata quando un client vuole spostare truppe da un territorio all'altro.
   socket.on('moveTroops', function(data) {
-    var player = Player.found(data.player);
+    var player = Player.find(data.player);
     var initialState = states.find(item=>item.name==data.state1);
     var endState = states.find(item=>item.name==data.state2);
     var troops = data.troop;
@@ -656,16 +676,16 @@ io.on('connection', function(socket) {
     // Oppure il player è il possessore dei territori ed ha appena conquistato un territorio.
     if (((player.nickname == initialState.owner) && (player.nickname == endState.owner)) && ((player.computationState == playerState.MOVE) || (stateWon))) {
       // Devo anche controllare che i due stati siano confinanti.
-      if(initialState.neighbor.includes(endState)) {
+      if(initialState.neighbor.includes(endState.name)) {
         // Se il territorio di partenza ha effettivamente tali truppe e il giocatore lascia almeno un carro armato.
-        if (state1.troop > troops) {
-          state1.troop = state1.troop - troops;
-          state2.troop = state2.troop + troops;
+        if (initialState.troops > troops) {
+          initialState.troops = initialState.troops - troops;
+          endState.troops = endState.troops + troops;
           socket.emit("movedTroops");
 
           if (!stateWon) {
             // Se lo spostamento va a buon fine devo iniziare un nuovo turno.
-            changeTurn(true, playerState.WAITER, player);
+            Player.changeTurn(true, playerState.WAITER, player);
           }
           update();
 
@@ -677,7 +697,7 @@ io.on('connection', function(socket) {
         }
       }
 
-      // Se i due stati non sono confinanti avviso l'utente..
+      // Se i due stati non sono confinanti avviso l'utente.
       else {
         socket.emit("error", "noNeighbor");
       }
@@ -696,9 +716,10 @@ io.on('connection', function(socket) {
 
    // Se ricevo questo messaggio vuol dire che il client ha saltato lo spostamento.
    socket.on('endMove' , function() {
+    var player = Player.find(data);
     // Cambio il suo stato e aggiorno tutti.
     if (player.computationState == playerState.MOVE) {
-      changeTurn(true, playerState.WAITER, player);
+      Player.changeTurn(true, playerState.WAITER, player);
       update();
     }
 
@@ -746,7 +767,9 @@ io.on('connection', function(socket) {
   });
 });
 
+/*
 setInterval ( function() {
+
   console.log("SOCKETLIST");
   for (var i in SOCKET_LIST) {
     console.log(SOCKET_LIST[i].id);
@@ -756,4 +779,7 @@ setInterval ( function() {
     console.log(Player.list[i].id);
   }
   console.log("");
+
+  
 }, 10000)
+*/
