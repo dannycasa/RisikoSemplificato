@@ -355,18 +355,22 @@
                 else {
                   // Se ho cliccato su un'altro stato che mi appartiene ed è confinante allora posso effettuare lo spostamento.
                   if(currentLocation.neighbor.includes(clickedState.name)) {
-                    if(clickedState.troops > 1) {
+                    var value = prompt("Quanti carri armati spostare? Inserisci un numero tra 1 e " + clickedState.troops + " escluso.");
+                    while(value == 0 || value >= clickedState.troops)
+                      value = prompt("Quanti carri armati spostare? Inserisci un numero tra 1 e " + clickedState.troops + " escluso.");
+
+                    number = Number(value);
+
+                    if(clickedState.troops > value) {
                       socket.emit('moveTroops', {
                         player: nickname,
                         state1: clickedState.name,
                         state2: currentLocation.name,
-                        // Al momento facciamo solo una truppa per vedere se funziona intanto.
-                        troop: 1,
-                        won: null
+                        troop: number,
+                        won: false
                       });
                       clickedState = null;
                       clearInterval(timer);
-                      console.log("spostato");
                     }
 
                     else {
@@ -409,11 +413,26 @@
               // Verifico che ho già scelto lo stato di partenza per effettuare l'attacco e che quello di destinazione sia confinante.
               if ((clickedState != null) && (currentLocation.neighbor.includes(clickedState.name))) {
                 // Se sono vicini allora posso effettuare l'attacco, nota che devo avere almeno 2 truppe.
-                if(clickedState.troops > 1) {
+                var value;
+                if (clickedState.troops >= currentLocation.troops) {
+                  value = prompt("Quanti carri armati usare per l'attacco? Inserisci un numero tra 1 e " + currentLocation.troops + " incluso.");
+                  while(value == 0 || value > currentLocation.troops)
+                    value = prompt("Quanti carri armati usare per l'attacco? Inserisci un numero tra 1 e " + currentLocation.troops + " incluso.");
+                }
+
+                else {
+                  value = prompt("Quanti carri armati usare per l'attacco? Inserisci un numero tra 1 e " + clickedState.troops + " escluso.");
+                  while(value == 0 || value >= clickedState.troops)
+                    value = prompt("Quanti carri armati usare per l'attacco? Inserisci un numero tra 1 e " + clickedState.troops + " escluso.");
+                }
+                
+                value = Number(value);
+
+                if(((clickedState.troops >= currentLocation.troops) && (value > 0) &&( value <= currentLocation.troops)) || ((clickedState.troops < currentLocation.troops) && (value > 0) && (value < clickedState.troops))) {
                   socket.emit('attackPlayer', {
                     attacker: nickname,
                     defender: currentLocation.owner,
-                    troop: 1,
+                    troop: value,
                     state1: clickedState.name,
                     state2: currentLocation.name
                   });
@@ -493,7 +512,22 @@
       socket.on('stateWon', function(data) {
         var name = data.name;
         var symbol = data.symbol;
+        var max = data.value;
+        var start = data.start;
+
         alert("Complimenti hai vinto tutti gli scontri e conquistato lo stato " + name + '.\nHai pescato una carta ' + symbol + ".");
+
+        var value = prompt("Quanti carri armati spostare? Inserisci un numero tra 1 e " + max + " escluso.");
+        while(value == 0 || value >= max)
+          value = prompt("Quanti carri armati spostare? Inserisci un numero tra 1 e " + max + " escluso.");
+
+        socket.emit("moveTroops", {
+          player: nickname,
+          state1: start,
+          state2: name,
+          troop: Number(value),
+          won: true
+        });
       });
 
       // L'attaccante non è riuscito a conquistare lo stato.
@@ -523,7 +557,7 @@
       // Fine partita, qualcuno ha abbandonato.
       socket.on('endOffline', function() {
         alert("La partita è terminata, un giocatore si è ritirato. \n Verrai riportato alla home page.");
-        location.replace("./client/index.html");
+        location.replace("./index.html");
       }); 
 
       // Vittoria o vittoria per abbandono.
@@ -535,7 +569,7 @@
         else
           alert("Il giocatore " + data + " ha vinto! \n Verrai riportato alla home page.");
 
-        location.replace("./client/index.html");
+        location.replace("./index.html");
       }); 
 
       // Funzione che viene richiamata quando viene premuto enter nell'input della chat.

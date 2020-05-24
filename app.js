@@ -339,41 +339,41 @@ Player.countBonus = function(player) {
   for (var i in player.states) {
     var continent = player.states[i].continent;
   
-    if (continent == continents.find(item=>item.name=='America Settentrionale'))
+    if (continent == continents.find(item=>item.name=='America Settentrionale').name)
       countAmericaSettentrionale++;
 
-    else if (continent == continents.find(item=>item.name=='America Meridionale'))
+    else if (continent == continents.find(item=>item.name=='America Meridionale').name)
       countAmericaMeridionale++;
 
-    else if (continent == continents.find(item=>item.name=='Europa'))
+    else if (continent == continents.find(item=>item.name=='Europa').name)
       countEuropa++;
 
-    else if (continent == continents.find(item=>item.name=='Africa'))
+    else if (continent == continents.find(item=>item.name=='Africa').name)
       countAfrica++;
 
-    else if (continent == continents.find(item=>item.name=='Asia'))
+    else if (continent == continents.find(item=>item.name=='Asia').name)
       countAsia++;
 
-    else if (continent == continents.find(item=>item.name=='Oceania'))
+    else if (continent == continents.find(item=>item.name=='Oceania').name)
       countOceania++;
   }
 
-  if (countAmericaSettentrionale == continents.find(item=>item.name=='America Settentrionale'))
+  if (countAmericaSettentrionale == continents.find(item=>item.name=='America Settentrionale').states)
     totalBonus += continents.find(item=>item.name=='America Settentrionale').bonus;
 
-  else if (countAmericaMeridionale == continents.find(item=>item.name=='America Meridionale'))
+  else if (countAmericaMeridionale == continents.find(item=>item.name=='America Meridionale').states)
     totalBonus += continents.find(item=>item.name=='America Meridionale').bonus;
 
-  else if (countEuropa == continents.find(item=>item.name=='Europa'))
+  else if (countEuropa == continents.find(item=>item.name=='Europa').states)
     totalBonus += continents.find(item=>item.name=='Europa').bonus;
 
-  else if (countAfrica == continents.find(item=>item.name=='Africa'))
+  else if (countAfrica == continents.find(item=>item.name=='Africa').states)
     totalBonus += continents.find(item=>item.name=='Africa').bonus;
 
-  else if (countAsia == continents.find(item=>item.name=='Asia'))
+  else if (countAsia == continents.find(item=>item.name=='Asia').states)
     totalBonus += continents.find(item=>item.name=='Asia').bonus;
 
-  else if (countOceania == continents.find(item=>item.name=='Oceania'))
+  else if (countOceania == continents.find(item=>item.name=='Oceania').states)
     totalBonus += continents.find(item=>item.name=='Oceania').bonus;
   
   // Assegno il bonus al giocatore.
@@ -526,7 +526,7 @@ io.on('connection', function(socket) {
       if(attackerState.neighbor.includes(defenderState.name)) {
         // Controllo che sia lo stato che attacca che quello che difende abbiano abbastanza truppe. 
         // Allo stato attaccante deve rimanere almeno un carro armato nel territorio, lo stato difensore invece può schierare tutte le truppe.     
-        if ((attackerState.troop > troops) && (defenderState.troop >= troops)) { 
+        if ((attackerState.troops > troops) && (defenderState.troops >= troops)) { 
           // Creo e riempio gli array che contengono il lancio dei dadi.
           var attackerDice = [];
           var defenderDice = [];
@@ -548,21 +548,21 @@ io.on('connection', function(socket) {
           // Conto gli scontri vinti dall'attaccante
           var clashesWon = 0;
           // Controllo chi vince gli scontri.
-          for (var i = 0; i < troop; i++) {
+          for (var i = 0; i < troops; i++) {
             // Il numero deve essere strettamente maggiore, altrimenti vince la difesa.
             if (attackerDice[i] > defenderDice[i])
               clashesWon++;
           }
 
           // Se l'attaccante vince tutti gli scontri e lo stato difensore rimane senza truppe.
-          if ((clashesWon == troop) && (defenderState.troop == troop)) {
+          if ((clashesWon == troops) && (defenderState.troops == troops)) {
             // Cambio il possessore dello stato, aggiungo tale stato alla lista degli stati dell'attaccante e azzero le truppe presenti.
             defenderState.owner = attacker.nickname;
             attacker.states.push(defenderState);
             defenderState.troops = 0;
 
             // Tolgo lo stato dalla lista degli stati del giocatore che difendeva.
-            delete defender.states[defenderState];
+            defender.states = defender.states.filter(function(value, index, arr){ return value.name != defenderState.name;});
 
             // Verifico se devo modificare i bonus dei giocatori.
             Player.countBonus(attacker);
@@ -570,20 +570,24 @@ io.on('connection', function(socket) {
 
             // Pesco una carta simbolo.
             var index = Math.round(Math.random() * 3);
-            var symbol = symbols.slice(index, index+1);
-            attacker.symbols.push(symbol);
+            var arraySymbols = ['Cannone', 'Fante', 'Cavaliere'];
+            var symbol = arraySymbols[index];
+
+            attacker.symbols.push(symbols[symbol]);
           
             // Avviso l'attaccante che ha conquistato lo stato.
             socket.emit("stateWon", {
               name: defenderState.name,
-              symbol: symbols[index]
+              symbol: symbol,
+              value: attackerState.troops,
+              start: attackerState.name
             });
 
             // Avviso il difensore che ha perso lo stato.
             var sock = defender.id;
             SOCKET_LIST[sock].emit("stateLost", {
-              name: defenderState,
-              player: attacker
+              name: defenderState.name,
+              player: attacker.nickname
             });
 
             // Controllo condizione di vittoria.
@@ -601,7 +605,7 @@ io.on('connection', function(socket) {
             socket.emit("stateNotWon", {
               player: defender.nickname,
               battleWon: clashesWon,
-              totalBattle: troop,
+              totalBattle: troops,
               name: defenderState.name
             });
 
@@ -609,14 +613,14 @@ io.on('connection', function(socket) {
             SOCKET_LIST[sock].emit("stateNotWon", {
               player: defender.nickname,
               battleWon: clashesWon,
-              totalBattle: troop,
+              totalBattle: troops,
               name: defenderState.name
             });
-          }
 
-          // Aggiorno le truppe degli stati.
-          attackerState.troop = attackerState.troop - (troops - clashesWon);
-          defenderState.troop = defenderState.troop - clashesWon;
+            // Aggiorno le truppe degli stati.
+            attackerState.troops = attackerState.troops - (troops - clashesWon);
+            defenderState.troops = defenderState.troops - clashesWon;
+          }
 
           // Aggiorno i client.
           update();
@@ -677,12 +681,12 @@ io.on('connection', function(socket) {
         if (initialState.troops > troops) {
           initialState.troops = initialState.troops - troops;
           endState.troops = endState.troops + troops;
-          socket.emit("movedTroops");
 
           if (!stateWon) {
             // Se lo spostamento va a buon fine devo iniziare un nuovo turno.
             Player.changeTurn(true, playerState.WAITER, player);
           }
+
           update();
 
         }
@@ -736,13 +740,19 @@ io.on('connection', function(socket) {
       for (var p in Player.list) {
         for (var i in SOCKET_LIST) {
           var socket = SOCKET_LIST[i];
-          if ((socket.id == p.id) && (playerNumber == 1))
+          if ((socket.id == Player.list[p].id) && (playerNumber == 2))
             socket.emit("victory", "left");
-          else if (socket.id == p.id)
+          else if (socket.id == Player.list[p].id)
             socket.emit("endOffline");
         }
       }
+      started = false;
+      playerNumber = 0;
+      playerTurn = -1;
+      firstTurn = true;
     }
+
+    
   });
 
   // Viene richiamata quando un client invia un messaggio in chat.
