@@ -8,7 +8,7 @@
   <body oncontextmenu='return false;'>
     <div id='name-prompt-overlay'>
       <div id='name-prompt-container'>
-        <form id='name-form'>
+        <form id='name-form' onsubmit="joinGame(); return false">
           <input type='text' id='name-input' placeholder='Nickname'
             autocomplete='off' required/>
           <button id='nick' form='nickname-form'>
@@ -188,6 +188,8 @@
         e.preventDefault();
         joinGame();
       };
+
+
 
     </script>
   </body>

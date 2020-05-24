@@ -149,7 +149,7 @@ Player.assignStatePlayers = function () {
         if (states[s].owner == null) {
           player.states.push(states[s]);
           states[s].owner = player.nickname;
-          states[s].troops = 0;
+          states[s].troops = 1;
           assigned = 1;
         }
         // Altrimenti cerco un altro stato.
@@ -168,7 +168,7 @@ Player.changeTurn = function(changed, pState, player) {
     if(playerTurn + 1 == playerNumber) {
       firstTurn = false;
     }
-    playerTurn = (playerTurn + 1) % (playerNumber - 1);
+    playerTurn = (playerTurn + 1) % (playerNumber);
   }
 
   for (var i in Player.list) {
@@ -180,7 +180,7 @@ Player.changeTurn = function(changed, pState, player) {
       // Do le truppe che gli spettano al mio giocatore.
       p.troop = Math.floor(p.states.length / 3) + p.bonus;
       if (firstTurn)
-        p.troop += bonusFirstTurn[playerNumber];
+        p.troop += bonusFirstTurn[playerNumber] - p.stateNumber;
     }
 
     // Se non è cambiato il turno e sono il giocatore indicato allora il mio stato diventa quello passato come argomento.
@@ -304,17 +304,18 @@ Player.removeSymbol = function(symbol, player, array) {
   else if (symbol == symbols.Jolly) {
     var count1 = 2;
     var count2 = 1;
+
     for (var i = 0; i < 3; i++) {
       for (var s in player.symbols) {
         // La prima posizione di array contiene il simbolo da rimuovere due volte.
-        if ((player.symbols[i] == array[0]) && (count1 > 0)) {
-          delete player.symbols[i];
+        if ((player.symbols[s] == array[0]) && (count1 > 0)) {
+          delete player.symbols[s];
           count1--;
           break;
         }
         // La seconda posizione di array contiene il simbolo da rimuovere una volta.
-        else if((player.symbols[i] == array[1]) && (count2 > 0)) {
-          delete player.symbols[i];
+        else if((player.symbols[s] == array[1]) && (count2 > 0)) {
+          delete player.symbols[s];
           count2--;
           break;
         }
@@ -388,7 +389,8 @@ function update() {
         var socket = SOCKET_LIST[j];
         socket.emit('update', {
           player: infoGiocatori,
-          state: states
+          state: states,
+          first: firstTurn
         });
         break;
       }
@@ -404,6 +406,12 @@ io.on('connection', function(socket) {
   SOCKET_LIST[socket.id] = socket;
   
   console.log('New Connection ' + socketID);
+
+  for (var i in Player.list) 
+    console.log(Player.list[i].id);
+  console.log("");
+  for (var i in SOCKET_LIST) 
+    console.log(SOCKET_LIST[i].id);
 
   // Viene richiamata quando client, cioè un giocatore si registra alla partita.
   socket.on('newPlayer', function(data) {
@@ -439,56 +447,32 @@ io.on('connection', function(socket) {
         Player.list[i].id = socketID;
         break;
       }
-    }
-    console.log("cambio");
-    // Se ci sono due giocatori assegno gli stati, l'eventuale bonus e pongo started a true.
-    if (!started && playerNumber == 2) {
-      Player.assignStatePlayers();
-      for (var i in Player.list) {
-        Player.countBonus(Player.list[i]);
-      }
-      started = true;
-      
-      // Cambio lo stato del primo giocatore in ASSIGN. e tutti gli altri in WAITER.
-      Player.changeTurn(true, playerState.ASSIGN, null);
-      update();
-      console.log("inizio");
-      for (var p in Player.list) {
-        for(var i in SOCKET_LIST) {
-          if (Player.list[p].id == SOCKET_LIST[i].id) {
-            console.log (SOCKET_LIST[i].id);
-          }
-        }
-      }
-      console.log("fine");
-    }
-
-    for (var i in Player.list) 
-        console.log(Player.list[i].id);
-      console.log("");
-      for (var i in SOCKET_LIST) 
-        console.log(SOCKET_LIST[i].id);
+    }    
   });
 
   // Viene richiamata quando un client vuole scambiare le sue carte simbolo.
   socket.on('exchangeSymbol', function(data) {
     var combination = data.combination;
     var array = data.array;
+    var player = Player.find(data.player);
+    var symbol;
+
+    for (var i in symbols) {
+      if (symbols[i] == combination)
+        symbol = i;
+    }
 
     // Se la combinazione è corretta e il giocatore ne è in possesso.
-    if ((symbols.includes(combination)) && Player.countSymbol(combination, player, array)) {
+    if ((symbol != null) && Player.countSymbol(combination, player, array)) {
       // Aggiungo le truppe al giocatore e rimuovo i simboli.
-      player.troops += symbols[combination];
+      player.troop += combination;
       Player.removeSymbol(combination, player, array);
-      var update = Player.update();
-
-      // In questo caso aggiorno soltanto l'utente corrente.
-      socket.emit('update', update);
+      update();
     }
 
     // Altrimenti dico che non si hanno i simboli richiesti.
     else {
-      socket.emit('error', 'noSymbol');
+      socket.emit("problem", 'noSymbol');
     }
 
   });
@@ -506,7 +490,11 @@ io.on('connection', function(socket) {
 
       // Se ho finito di assegnare le truppe passo allo stato ATTACK.
       if (player.troop == 0) {
-        Player.changeTurn(false, playerState.ATTACK, player);
+        if (firstTurn)
+          Player.changeTurn(true, playerState.WAITER, player);
+
+        else
+          Player.changeTurn(false, playerState.ATTACK, player);
       }
 
       update();
@@ -514,12 +502,12 @@ io.on('connection', function(socket) {
 
     // Il giocatore non può assegnare le truppe. Non è il suo momento.
     else if ((player.nickname == state.owner) && (player.computationState != playerState.ASSIGN)) {
-      socket.emit("error", "noTurn");
+      socket.emit("problem", "noTurn");
     }
 
     // Altrimenti non possiede il territorio.
     else {
-      socket.emit("error", "move"); 
+      socket.emit("problem", "move"); 
     }
   });
 
@@ -535,7 +523,7 @@ io.on('connection', function(socket) {
     // del difensore e che l'attaccante possa effettivamente attaccare.
     if ((attacker.nickname == attackerState.owner) && (defender.nickname == defenderState.owner) && (attacker.computationState == playerState.ATTACK)) {
       // Devo anche controllare che i due stati siano confinanti.
-      if(attackerState.neighbor.includes(defenderState)) {
+      if(attackerState.neighbor.includes(defenderState.name)) {
         // Controllo che sia lo stato che attacca che quello che difende abbiano abbastanza truppe. 
         // Allo stato attaccante deve rimanere almeno un carro armato nel territorio, lo stato difensore invece può schierare tutte le truppe.     
         if ((attackerState.troop > troops) && (defenderState.troop >= troops)) { 
@@ -581,9 +569,9 @@ io.on('connection', function(socket) {
             Player.countBonus(defender);
 
             // Pesco una carta simbolo.
-            var index = Math.round(Math.random() * 5);
+            var index = Math.round(Math.random() * 3);
             var symbol = symbols.slice(index, index+1);
-            attacker.symbols.push[symbol];
+            attacker.symbols.push(symbol);
           
             // Avviso l'attaccante che ha conquistato lo stato.
             socket.emit("stateWon", {
@@ -596,7 +584,15 @@ io.on('connection', function(socket) {
             SOCKET_LIST[sock].emit("stateLost", {
               name: defenderState,
               player: attacker
-            })
+            });
+
+            // Controllo condizione di vittoria.
+            if(attacker.states.length == attacker.stateNumber + 5) {
+              // Avviso tutti che c'è un vincitore e la partita è finita.
+              for (var s in SOCKET_LIST)
+                SOCKET_LIST[s].emit("victory" , attacker.nickname);
+            }
+
           }
 
           // Altrimenti l'attacco è fallito.
@@ -628,24 +624,24 @@ io.on('connection', function(socket) {
         
         // Se il numero di truppe non va bene allora avviso l'utente.
         else {
-          socket.emit("error", "noTroops");
+          socket.emit("problem", "noTroops");
         }
       }
 
       // Se i due stati non sono confinanti avviso l'utente..
       else {
-        socket.emit("error", "noNeighbor");
+        socket.emit("problem", "noNeighbor");
       }
     }
 
     // Il giocatore non può attaccare. Non è il suo momento.
     else if ((attacker.nickname == attackerState.owner) && (defender.nickname == defenderState.owner) && (player.computationState != playerState.ATTACK)) {
-      socket.emit("error", "noTurn");
+      socket.emit("problem", "noTurn");
     }
 
     // Altrimenti non possiede il suo territorio.
     else {
-      socket.emit("error", "attack");    
+      socket.emit("problem", "attack");    
     }
   });
 
@@ -660,7 +656,7 @@ io.on('connection', function(socket) {
 
     // Non è il turno del giocatore.
     else {
-      socket.emit("error", "noTurn");
+      socket.emit("problem", "noTurn");
     }
   });
 
@@ -693,29 +689,29 @@ io.on('connection', function(socket) {
 
         // Se non ha abbastanza truppe lo avviso.
         else {
-          socket.emit("error", "noTroops");
+          socket.emit("problem", "noTroops");
         }
       }
 
       // Se i due stati non sono confinanti avviso l'utente.
       else {
-        socket.emit("error", "noNeighbor");
+        socket.emit("problem", "noNeighbor");
       }
     }
 
     // Il giocatore non può spostare truppe. Non è il suo momento.
     else if (player.computationState != playerState.MOVE) {
-      socket.emit("error", "noTurn");
+      socket.emit("problem", "noTurn");
     }
 
     // Altrimenti non possiede almeno uno dei due territori.
     else {
-      socket.emit("noOwner", "move");
+      socket.emit("problem", "move");
     }
   });
 
    // Se ricevo questo messaggio vuol dire che il client ha saltato lo spostamento.
-   socket.on('endMove' , function() {
+   socket.on('endMove' , function(data) {
     var player = Player.find(data);
     // Cambio il suo stato e aggiorno tutti.
     if (player.computationState == playerState.MOVE) {
@@ -737,9 +733,14 @@ io.on('connection', function(socket) {
 
     // Se la partita è iniziata informo gli altri che un giocatore è andato offline. La partita viene interrotta.
     if (started) {
-      for (var i in SOCKET_LIST) {
-        var socket = SOCKET_LIST[i];
-        socket.emit("endOffline");
+      for (var p in Player.list) {
+        for (var i in SOCKET_LIST) {
+          var socket = SOCKET_LIST[i];
+          if ((socket.id == p.id) && (playerNumber == 1))
+            socket.emit("victory", "left");
+          else if (socket.id == p.id)
+            socket.emit("endOffline");
+        }
       }
     }
   });
@@ -767,19 +768,21 @@ io.on('connection', function(socket) {
   });
 });
 
-/*
-setInterval ( function() {
 
-  console.log("SOCKETLIST");
-  for (var i in SOCKET_LIST) {
-    console.log(SOCKET_LIST[i].id);
+var timer = setInterval ( function() {
+  // Se ci sono due giocatori assegno gli stati, l'eventuale bonus e pongo started a true.
+  if (!started && playerNumber == 2) {
+    Player.assignStatePlayers();
+    for (var i in Player.list) {
+      Player.countBonus(Player.list[i]);
+    }
+    started = true;
+    
+    // Cambio lo stato del primo giocatore in ASSIGN. e tutti gli altri in WAITER.
+    Player.changeTurn(true, playerState.ASSIGN, null);
+    update();
+    clearInterval(timer);
   }
-  console.log("\nPLAYERLIST");
-  for (var i in Player.list) {
-    console.log(Player.list[i].id);
-  }
-  console.log("");
-
   
 }, 10000)
-*/
+

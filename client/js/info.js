@@ -623,11 +623,11 @@ const continents = [
 ];
 
 const symbols = {
-  'Cannone': 4,
-  'Fante': 6,
-  'Cavaliere': 8,
-  'Diversi': 10,
-  'Jolly': 12
+  Cannone: 4,
+  Fante: 6,
+  Cavaliere: 8,
+  Diversi: 10,
+  Jolly: 12
 };
 
 // I colori sono verde, rosso, giallo e blu.
@@ -658,7 +658,8 @@ const suggestions = {
   ATTACK: 'Puoi attaccare gli stati nemici con i tuoi, nota che uno stato per poter essere attaccato deve essere confinante al tuo. Una volta terminata la fase di attacco clicca sul bottone "Termina fase di attacco" nella sezione "Possibili azioni del giocatore". Se conquisti un territorio hai diritto ad uno spostamento dal territorio di attacco a quello conquistato. Ricorda che deve rimanere almeno un carro armato a difendere ogni tuo stato.',
   MOVE: 'Puoi spostare le truppe da un tuo stato ad un altro se tali stati sono confinanti. Puoi effettuare un solo spostamento ogni turno. Lo spostamento non è obbligatorio, infatti si può cliccare sul bottone "Termina fase di spostamento" nella sezione "Possibili azioni del giocatore". Lo spostamento determina la fine del turno.',
   WAITER: 'Non è il tuo turno, un altro giocatore sta effettuando le proprie mosse.',
-  IDLE: 'Sei correttamente registrato nel sistema, attendi il via libera del server.'
+  IDLE: 'Sei correttamente registrato nel sistema, attendi il via libera del server.',
+  FIRST: 'Questo è il primo turno, ti abbiamo affidato truppe bonus e in automatico abbiamo posto un carro armato a difesa dei tuoi territori. Colloca il resto dei carri a tua disposizione, in seguito verrà automaticamente passato il turno. Ma solo questa volta!'
 }
 
 const firstTroopAssignment = {

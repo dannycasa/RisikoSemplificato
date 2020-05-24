@@ -58,13 +58,14 @@
       var players = [];  
       var player; 
       var clickedState = null;
+      var firstTurn = false;
 
       // Recupero il mio nickname tramite URL.
       var ref = window.location.href;
       var url = ref.split("=");
       var nickname = url[1];
       document.getElementById('playerNickname').innerHTML += "<h3> Il tuo nickaname è "+ nickname +"</h3>";
-
+      var socket = io();
 
       // Aggiungo quello che ricevo alla chat.
       var chatText = document.getElementById('chat-text');
@@ -106,10 +107,12 @@
       }
 
       // Funzione per scambiare le carte simbolo per carri armati.
-      exchangeFunction = function(symbolType, array) {
+      exchangeFunction = function(symbolType, sym1, sym2) {
+        var array = [sym1, sym2];
         socket.emit('exchangeSymbol', {
           combination: symbolType,
-          array: array
+          array: array,
+          player: nickname
         });
       }
 
@@ -146,22 +149,21 @@
         }
 
         for (var i = 0; i < players.length; i++) {
+          // Per ogni giocatore disegno il numero di truppe che ha assegnato ad ogni territorio.
           for (var j = 0; j < players[i].states.length; j++) {
             stateList.forEach(state => {
               if (state.name == players[i].states[j].name) {
                 context.beginPath();
                 context.globalAlpha = 1;
                 context.fillStyle = players[i].color;
-                context.font="20px verdana";
+                context.font="30px verdana";
                 context.fillText(players[i].states[j].troops, state.x - 5, state.y);
               }
             });
           }
 
           // Aggiorno la lista dei giocatori.
-          playerList.innerHTML += '<div style="color:' + players[i].color +'"> -  ' + players[i].nickname + '</div>';
-
-          
+          playerList.innerHTML += '<div style="color:' + players[i].color +'"> -  ' + players[i].nickname + '</div>';          
 
           // Se mi riconosco aggiorno il mio stato e altre informazioni.
           if(players[i].nickname == nickname) {
@@ -184,9 +186,9 @@
             else 
               playerSymbols.innerHTML += "<div>" + countFanti + " Fante.</div>";
             if (countCavalieri != 1)
-              playerSymbols.innerHTML += "<div>" + countCavalieri + " Cavalieri</div>";
+              playerSymbols.innerHTML += "<div>" + countCavalieri + " Cavalieri.</div>";
             else
-              playerSymbols.innerHTML += "<div>" + countCavalieri + " Cavaliere</div>";
+              playerSymbols.innerHTML += "<div>" + countCavalieri + " Cavaliere.</div>";
 
             // Aggiorno il client di cosa sta facendo il giocatore in turno, la sezione suggerimenti per ogni mossa e la sezione azioni possibili.
             if (players[i].computationState == clientStates.ASSIGN) {
@@ -197,45 +199,45 @@
               else 
                 playerActions.innerHTML += '<div> Ti rimane da assegnare ' + players[i].troop + ' carro armato.</div>';            
 
+              if (firstTurn)
+                playerActions.innerHTML += '<div>' + suggestions.FIRST + '</div>';
               // Verifico se devo inserire i bottoni per lo scambio delle truppe.
               if (countCannoni >= 3) 
-                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Cannone, null)'>Scambia tre Cannoni per 4 truppe.</button>";
+                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Cannone, null, null)'>Scambia tre Cannoni per 4 truppe.</button>";
               if (countFanti >= 3)
-                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Fante, null)'>Scambia tre Fanti per 6 truppe.</button>";
+                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Fante, null, null)'>Scambia tre Fanti per 6 truppe.</button>";
               if (countCavalieri >= 3)
-                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Cavaliere, null)'>Scambia tre Cavalieri per 8 truppe.</button>";
+                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Cavaliere, null, null)'>Scambia tre Cavalieri per 8 truppe.</button>";
               if ((countCannoni > 0) && (countFanti > 0) && (countCavalieri > 0))
-                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Diversi, null)'>Scambia un Cannone, un Fante e un Cavaliere per 10 truppe.</button>";
+                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Diversi, null, null)'>Scambia un Cannone, un Fante e un Cavaliere per 10 truppe.</button>";
               
                 // Se è disponibile la combinazione due cannoni e un fante.
               if ((countCannoni >=2) && (countFanti != 0)) {
-                var array = [symbols.Cannone, symbols.Fante];
-                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Jolly," + array + ")'>Scambia due Cannoni e un Fante per 12 truppe.</button>";
+                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Jolly," + symbols.Cannone + "," + symbols.Fante + ")'>Scambia due Cannoni e un Fante per 12 truppe.</button>";
               }
               // Se è disponibile la combinazione due cannoni e un cavaliere.
               if ((countCannoni >=2) && (countCavalieri != 0)) {
-                var array = [symbols.Cannone, symbols.Cavaliere];
-                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Jolly," + array + ")'>Scambia due Cannoni e un Cavaliere per 12 truppe.</button>";
+                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Jolly," + symbols.Cannone + "," + symbols.Cavaliere + ")'>Scambia due Cannoni e un Cavaliere per 12 truppe.</button>";
               }
               // Se è disponibile la combinazione due fanti e un cannone.
               if ((countFanti >=2) && (countCannoni != 0)) {
                 var array = [symbols.Fante, symbols.Cannone];
-                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Jolly," + array + ")'>Scambia due Fanti e un Cannone per 12 truppe.</button>";
+                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Jolly," + symbols.Fante + "," + symbols.Cannone + ")'>Scambia due Fanti e un Cannone per 12 truppe.</button>";
               }
               // Se è disponibile la combinazione due fanti e un cavaliere.
               if ((countFanti >=2) && (countCavalieri != 0)) {
                 var array = [symbols.Fante, symbols.Cavaliere];
-                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Jolly," + array + ")'>Scambia due Fanti e un Cavaliere per 12 truppe.</button>";
+                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Jolly," + symbols.Fante + "," + symbols.Cavaliere + ")'>Scambia due Fanti e un Cavaliere per 12 truppe.</button>";
               }
               // Se è disponibile la combinazione due cavalieri e un cannone.
               if ((countCavalieri >=2) && (countCannoni != 0)) {
                 var array = [symbols.Cavaliere, symbols.Cannone];
-                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Jolly," + array + ")'>Scambia due Cavalieri e un Cannone per 12 truppe.</button>";
+                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Jolly," + symbols.Cavaliere + "," + symbols.Cannone + ")'>Scambia due Cavalieri e un Cannone per 12 truppe.</button>";
               }
               // Se è disponibile la combinazione due cavalieri e un fante.
               if ((countCavalieri >=2) && (countFanti != 0)) {
                 var array = [symbols.Cavaliere, symbols.Fante];
-                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Jolly," + array + ")'>Scambia due Cavalieri e un Fante per 12 truppe.</button>";
+                playerActions.innerHTML += "<button onclick='exchangeFunction(symbols.Jolly," + symbols.Cavaliere + "," + symbols.Fante + ")'>Scambia due Cavalieri e un Fante per 12 truppe.</button>";
               }
             }
             else if (players[i].computationState == clientStates.ATTACK) {
@@ -305,16 +307,16 @@
       update();
 
       canvas.addEventListener('click', (e) => {
+        var rect = canvas.getBoundingClientRect();
         const pos = {
-          x: e.clientX,
-          y: e.clientY
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
         };
         var trovato = 0;
 
         // Scorro gli stati.
         for (var s in stateList) {
           state = stateList[s];
-          //stateList.forEach(state => {
           // Se ho cliccato su uno stato allora continuo.
           if (isIntersect(pos, state)) {
             currentLocation = state;
@@ -343,20 +345,14 @@
 
               // Se sono in stato MOVE allora devo selezionare il primo stato e se è già stato selezionato andare a selezionare il secondo.
               else if (currentState == clientStates.MOVE) {
-                console.log(clickedState + "1");
                 if(clickedState == null) {
                   // Ho cliccato sullo stato di partenza per lo spostamento.
                   clickedState = currentLocation;
-                  clearInterval(timer);
                   update();
                   flashObject(currentLocation, playerState.MOVE);
-                  console.log(clickedState.name + "2");
                 }
                 // Quando clicco sul secondo stato vedo se posso spostare.
                 else {
-                  console.log(clickedState.name + "3");
-                  console.log(currentLocation.neighbor);
-                  console.log(clickedState.neighbor);
                   // Se ho cliccato su un'altro stato che mi appartiene ed è confinante allora posso effettuare lo spostamento.
                   if(currentLocation.neighbor.includes(clickedState.name)) {
                     if(clickedState.troops > 1) {
@@ -393,7 +389,6 @@
               else if (currentState == clientStates.ATTACK) {
                 // Ho cliccato sullo stato di partenza per lo spostamento.
                 clickedState = currentLocation;
-                clearInterval(timer);
                 update();
                 flashObject(currentLocation, playerState.ATTACK);             
               } 
@@ -412,15 +407,15 @@
             // Se lo stato cliccato non è mio e io sono in modalità attacco.
             else if ((currentState == clientStates.ATTACK) && (currentLocation.owner != nickname)) {
               // Verifico che ho già scelto lo stato di partenza per effettuare l'attacco e che quello di destinazione sia confinante.
-              if ((clickedState != null) && (currentLocation.neighbor.includes(clickedState))) {
+              if ((clickedState != null) && (currentLocation.neighbor.includes(clickedState.name))) {
                 // Se sono vicini allora posso effettuare l'attacco, nota che devo avere almeno 2 truppe.
-                if(clickedState.troop > 1) {
+                if(clickedState.troops > 1) {
                   socket.emit('attackPlayer', {
                     attacker: nickname,
                     defender: currentLocation.owner,
                     troop: 1,
-                    state1: clickedState,
-                    state2: currentLocation
+                    state1: clickedState.name,
+                    state2: currentLocation.name
                   });
                   clickedState = null;
                   clearInterval(timer);
@@ -434,7 +429,7 @@
               else {
                 if (clickedState == null)
                   clickedState = currentLocation;
-                else if (!currentLocation.neighbor.includes(clickedState))
+                else if (!currentLocation.neighbor.includes(clickedState.name))
                   alert("Lo stato da attaccare deve essere confinante al tuo.");
               }
             }
@@ -443,7 +438,6 @@
             else if (currentState == clientStates.IDLE || currentState == clientStates.WAITER) {
               alert("Attendi il tuo turno");
             }
-
             break;
           }
         }
@@ -452,13 +446,10 @@
         if (trovato == 0) {
           clickedState = null;
           clearInterval(timer);
-          context.clearRect(0, 0, canvas.width, canvas.height);
           update();
         }
       });
-      
-      var socket = io();
-      
+            
       // Avviso il server che da ora deve comunicare con me tramite questa socket.
       socket.emit('newSocket', nickname);
      
@@ -473,7 +464,7 @@
       });
 
       // Gestisce un messaggio di errore mostrando un alert dedicato.
-      socket.on('error', function(data) {
+      socket.on('problem', function(data) {
         var type = data;
         if (type == 'move') 
           alert("Non possiedi il territorio o i territori!");
@@ -485,13 +476,15 @@
           alert("Non è il tuo turno. \n Attendi che ti avvisi il server.");
         else if(type == 'noNeighbor')
           alert("I due stati non sono confinanti.");
+        else if(type == 'noSymbol')
+          alert("Non hai i simboli necessari per lo scambio richiesto.");
       });
       
       // Il server mi sta inviando le nuove informazioni da mostrare.
       socket.on('update', function(data) {
         players = data.player;
         stateList = data.state;
-
+        firstTurn = data.first;
         // Disegno le nuove informazioni.  
         update();
       });
@@ -526,6 +519,24 @@
         var player = data.player;
         alert("Peccato, hai perso tutti gli scontri contro " + player + " e perso lo stato " + name + ".");
       });      
+
+      // Fine partita, qualcuno ha abbandonato.
+      socket.on('endOffline', function() {
+        alert("La partita è terminata, un giocatore si è ritirato. \n Verrai riportato alla home page.");
+        location.replace("./client/index.html");
+      }); 
+
+      // Vittoria o vittoria per abbandono.
+      socket.on("victory", function(data) {
+        if(data == 'left') 
+          alert("Il tuo avversario si è ritirato, hai vinto. \n Verrai riportato alla home page.");
+        else if (data == nickname)
+          alert("Complimenti, hai vinto! \n Verrai riportato alla home page.");
+        else
+          alert("Il giocatore " + data + " ha vinto! \n Verrai riportato alla home page.");
+
+        location.replace("./client/index.html");
+      }); 
 
       // Funzione che viene richiamata quando viene premuto enter nell'input della chat.
       formFunction = function() {
