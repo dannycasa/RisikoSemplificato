@@ -52,6 +52,7 @@ Durante lo svolgimento del gioco, il giocatore riceve delle informazioni dal ser
 
 
 Inoltre è possibile scrivere in una chat alla quale sono connessi tutti i partecipanti.
+Nel primo turno vengono assegnati gli stati e le truppe bonus, per semplicità viene assegnato in automatico un carro armato ad ogni stato affidato. In questo modo si evitano inconsistenze e problemi nel caso in cui un giocatore lasci inavvertitamente uno stato scoperto durante la fase di assegnamento iniziale.
 
 
 Parti funzionanti:
