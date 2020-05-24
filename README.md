@@ -61,6 +61,13 @@ Parti funzionanti:
             assegnamento stati ed inizializzazione corretta dei giocatori quando la partita inizia,
             chat tra i giocatori,
             assegnamento truppe nei propri territori,
+            fase di attacco e spostamento eventuale dovuto a vittoria,
             saltare fase di spostamento o terminare fase di attacco con il bottone,
             fase di spostamento,
+            assegnamento di truppe bonus quando si possiede un intero continente,
             scambio di carte simbolo con truppe.
+            
+Manca:
+
+            verifica condizione di vittoria,
+            disconnessione.
