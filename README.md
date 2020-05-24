@@ -65,9 +65,9 @@ Parti funzionanti:
             saltare fase di spostamento o terminare fase di attacco con il bottone,
             fase di spostamento,
             assegnamento di truppe bonus quando si possiede un intero continente,
-            scambio di carte simbolo con truppe.
+            scambio di carte simbolo con truppe,
+            disconnessione e vittoria per abbandono.
             
 Manca:
 
-            verifica condizione di vittoria,
-            disconnessione.
+            verifica condizione di vittoria.
