@@ -61,4 +61,5 @@ Parti funzionanti:
             chat tra i giocatori,
             assegnamento truppe nei propri territori,
             saltare fase di spostamento o terminare fase di attacco con il bottone,
-            fase di spostamento.
+            fase di spostamento,
+            scambio di carte simbolo con truppe.
