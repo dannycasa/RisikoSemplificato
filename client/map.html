@@ -562,6 +562,7 @@
 
       // Vittoria o vittoria per abbandono.
       socket.on("victory", function(data) {
+        console.log(data);
         if(data == 'left') 
           alert("Il tuo avversario si è ritirato, hai vinto. \n Verrai riportato alla home page.");
         else if (data == nickname)

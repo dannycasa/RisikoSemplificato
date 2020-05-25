@@ -33,6 +33,7 @@ let playerState = stateModule.playerStateList;    // La lista dei possibili stat
 let bonusFirstTurn = stateModule.firstTroopAssignmentList; // Lista del bonus di carri armati dati al primo turno.
 let playerTurn = -1;                              // Indica di quale giocatore è il turno.
 let firstTurn = true;                              // Indica se è il primo turno o no.
+let end = false;
 
 // Costruttore Giocatori.
 var Player = function (number, color, nick, id) {
@@ -398,6 +399,27 @@ function update() {
   }
 }
 
+var control = function() {
+  var timer = setInterval ( function() {
+    // Se ci sono due giocatori assegno gli stati, l'eventuale bonus e pongo started a true.
+    if (!started && playerNumber == 2) {
+      Player.assignStatePlayers();
+      for (var i in Player.list) {
+        Player.countBonus(Player.list[i]);
+      }
+      started = true;
+      
+      // Cambio lo stato del primo giocatore in ASSIGN. e tutti gli altri in WAITER.
+      Player.changeTurn(true, playerState.ASSIGN, null);
+      update();
+      clearInterval(timer);
+    }
+    
+  }, 5000)  
+}
+
+control();
+
 // Gestione della comunicazione sulla socket.
 io.on('connection', function(socket) {
   // Ad ogni connessione, do un id alla socket e la aggiungo alla lista delle socket.
@@ -569,7 +591,7 @@ io.on('connection', function(socket) {
             Player.countBonus(defender);
 
             // Pesco una carta simbolo.
-            var index = Math.round(Math.random() * 3);
+            var index = Math.floor(Math.random() * 3);
             var arraySymbols = ['Cannone', 'Fante', 'Cavaliere'];
             var symbol = arraySymbols[index];
 
@@ -595,6 +617,8 @@ io.on('connection', function(socket) {
               // Avviso tutti che c'è un vincitore e la partita è finita.
               for (var s in SOCKET_LIST)
                 SOCKET_LIST[s].emit("victory" , attacker.nickname);
+              started = false;
+              control();
             }
 
           }
@@ -737,21 +761,22 @@ io.on('connection', function(socket) {
 
     // Se la partita è iniziata informo gli altri che un giocatore è andato offline. La partita viene interrotta.
     if (started) {
+      started = false;     
+      playerNumber = 0;
+      playerTurn = -1;
+      firstTurn = true;
+
       for (var p in Player.list) {
         for (var i in SOCKET_LIST) {
           var socket = SOCKET_LIST[i];
-          if ((socket.id == Player.list[p].id) && (playerNumber == 2))
+          if ((socket.id == Player.list[p].id) && (playerNumber == 2) && (Player.list.length ))
             socket.emit("victory", "left");
           else if (socket.id == Player.list[p].id)
             socket.emit("endOffline");
         }
       }
-      started = false;
-      playerNumber = 0;
-      playerTurn = -1;
-      firstTurn = true;
+      control();
     }
-
     
   });
 
@@ -777,22 +802,3 @@ io.on('connection', function(socket) {
     socket.emit('evalAnswer',res);
   });
 });
-
-
-var timer = setInterval ( function() {
-  // Se ci sono due giocatori assegno gli stati, l'eventuale bonus e pongo started a true.
-  if (!started && playerNumber == 2) {
-    Player.assignStatePlayers();
-    for (var i in Player.list) {
-      Player.countBonus(Player.list[i]);
-    }
-    started = true;
-    
-    // Cambio lo stato del primo giocatore in ASSIGN. e tutti gli altri in WAITER.
-    Player.changeTurn(true, playerState.ASSIGN, null);
-    update();
-    clearInterval(timer);
-  }
-  
-}, 10000)
-
