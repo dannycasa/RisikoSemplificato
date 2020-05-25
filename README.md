@@ -20,8 +20,6 @@ L'array playerState contiene la lista dei possibili stati in cui si può trovare
 
 L'array suggestions contiene la lista dei suggerimenti che vengono dati all'utente in base al proprio stato.
 
-Lo scheletro dell'applicazione lato server è quasi completato (manca la fase di debug in seguito all'utilizzo del server stesso).
-Lo scheletro dell'applicazione lato client è pronto per quanto riguarda la pagina di index ed in terminazione per quanto riguarda la pagina map.
 
 Per l'utilizzo:
 
@@ -52,6 +50,7 @@ Durante lo svolgimento del gioco, il giocatore riceve delle informazioni dal ser
 
 
 Inoltre è possibile scrivere in una chat alla quale sono connessi tutti i partecipanti.
+Scrivendo in chat /nome variabile si otterrà in console la stampa della variabile richiesta nel server. Ad esempio scrivendo /Player.list si otterrà come risposta la lista dei giocatori con relative truppe, bonus, stati ecc.
 Nel primo turno vengono assegnati gli stati e le truppe bonus, per semplicità viene assegnato in automatico un carro armato ad ogni stato affidato. In questo modo si evitano inconsistenze e problemi nel caso in cui un giocatore lasci inavvertitamente uno stato scoperto durante la fase di assegnamento iniziale.
 
 
@@ -68,4 +67,9 @@ Parti funzionanti:
             scambio di carte simbolo con truppe,
             disconnessione e vittoria per abbandono,
             verifica condizione di vittoria.
+            
+            
+Da notare che il termine semplificato ri riferisce a due fattori fondamentali che rendono tale gioco differente rispetto al gioco classico.
+La condizione di vittoria è semplificata, infatti un giocatore vince quando possiede contemporaneamente 5 territori in più rispetto a quelli assegnati inizialialmente. Questa condizione di vittoria è uguale per tutti e vince il primo che la soddisfa, nel gioco originale si hanno delle condizioni più articolate e differenti per ogni giocatore.
+Un'altra differenza sostanziale è che è stato rimosso (per velocizzare il tutto) il limite fisico del gioco reale del 3v3 quando si attacca uno stato. Se entrambi gli stati coinvolti nell'attacco posseggono almeno 5 truppe, ad esempio, sarà possibile fare un 5v5 invece che un 3v3 seguito da un 2v2.
                         
