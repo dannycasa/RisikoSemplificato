@@ -10,12 +10,12 @@
       <table>
         <tr>
           <td>
-            <canvas id="map" width="1296" height="729" style="background-image: url('/client/img/mappa.jpg'); border:1px solid #000000;"></canvas>
+            <canvas id="map" width="977" height="550" style="background-image: url('/client/img/mappa.jpg'); border:1px solid #000000;"></canvas>
           </td>
           <td>
             <div>
               <div id="playerNickname"> </div>
-              <div id="playerList" width="350px" heigth="100px" style="border:1px solid #000000;">
+              <div id="playerList" width="350px" height="100px" style="border:1px solid #000000;">
                 <div>Nome giocatori:</div>
               </div>
               <br>
@@ -156,7 +156,7 @@
                 context.beginPath();
                 context.globalAlpha = 1;
                 context.fillStyle = players[i].color;
-                context.font="30px verdana";
+                context.font="25px verdana";
                 context.fillText(players[i].states[j].troops, state.x - 5, state.y);
               }
             });
@@ -468,7 +468,42 @@
           update();
         }
       });
-            
+
+      /*
+      if(window.history && history.pushState) { 
+        addEventListener('load', function() {
+          history.pushState(null, null, null); 
+          addEventListener('popstate', function() {
+            var stayOnPage = confirm("Vuoi davvero abbandonare la partita? Essa terminerà immediatamente.");
+            // conferma
+            if (stayOnPage) {
+              socket.emit("disconnect");
+              location.replace("http://localhost:4040/");
+            } 
+          });    
+        });
+      }
+      */
+      /*
+      if (window.performance) {
+        // Se viene premuto il tasto aggiorna
+        if (performance.navigation.type === performance.navigation.TYPE_RELOAD) {
+          var exit = confirm("Vuoi davvero abbandonare la partita? Essa terminerà immediatamente.");
+          // conferma
+          if (exit) {
+            socket.emit("disconnect");
+            location.replace("http://localhost:4040/");
+          } 
+          else {
+            socket.emit('newSocket', nickname);
+          }
+        } 
+        else if(performance.navigation.type === performance.navigation.TYPE_BACK_FORWARD) {
+          console.info( "back detected" );
+        }
+      }
+      */
+
       // Avviso il server che da ora deve comunicare con me tramite questa socket.
       socket.emit('newSocket', nickname);
      
@@ -557,7 +592,7 @@
       // Fine partita, qualcuno ha abbandonato.
       socket.on('endOffline', function() {
         alert("La partita è terminata, un giocatore si è ritirato. \n Verrai riportato alla home page.");
-        location.replace("./index.html");
+        location.replace("http://localhost:4040/");
       }); 
 
       // Vittoria o vittoria per abbandono.
@@ -570,7 +605,7 @@
         else
           alert("Il giocatore " + data + " ha vinto! \n Verrai riportato alla home page.");
 
-        location.replace("./index.html");
+        location.replace("http://localhost:4040/");
       }); 
 
       // Funzione che viene richiamata quando viene premuto enter nell'input della chat.

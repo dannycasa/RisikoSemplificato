@@ -2,8 +2,8 @@ const states = [
   {
     name: 'Groenlandia',
     continent: 'America Settentrionale',
-    x: 482,
-    y: 85,
+    x: 364,
+    y: 63,
     radius: 20,
     neighbor: [
       'Quebec',
@@ -16,8 +16,8 @@ const states = [
   {
     name: 'Alaska',
     continent: 'America Settentrionale',
-    x: 141,
-    y: 127,
+    x: 106,
+    y: 95,
     radius: 20,
     neighbor: [
       'Territori del Nord Ovest',
@@ -29,8 +29,8 @@ const states = [
   {
     name: 'Territori del Nord Ovest',
     continent: 'America Settentrionale',
-    x: 219,
-    y: 151,
+    x: 166,
+    y: 116,
     radius: 20,
     neighbor: [
       'Groenlandia',
@@ -43,8 +43,8 @@ const states = [
   {
     name: 'Alberta',
     continent: 'America Settentrionale',
-    x: 175,
-    y: 210,
+    x: 131,
+    y: 157,
     radius: 20,
     neighbor: [
       'Alaska',
@@ -57,8 +57,8 @@ const states = [
   {
     name: 'Ontario',      
     continent: 'America Settentrionale',
-    x: 274,
-    y: 256,
+    x: 206,
+    y: 192,
     radius: 20,
     neighbor: [
       'Alberta',
@@ -73,8 +73,8 @@ const states = [
   {
     name: 'Quebec',    
     continent: 'America Settentrionale',
-    x: 365,
-    y: 269,
+    x: 275,
+    y: 203,
     radius: 20,
     neighbor: [
       'Ontario',
@@ -86,8 +86,8 @@ const states = [
   {
     name: 'Stati Uniti Orientali',       
     continent: 'America Settentrionale',
-    x: 228,
-    y: 329,
+    x: 170,
+    y: 245,
     radius: 20,
     neighbor: [
       'Stati Uniti Occidentali',
@@ -100,8 +100,8 @@ const states = [
   {
     name: 'Stati Uniti Occidentali',
     continent: 'America Settentrionale',
-    x: 145,
-    y: 276,
+    x: 110,
+    y: 208,
     radius: 20,
     neighbor: [
       'Alberta',
@@ -114,8 +114,8 @@ const states = [
   {
     name: 'America Centrale',    
     continent: 'America Settentrionale',
-    x: 127,
-    y: 342,
+    x: 91,
+    y: 257,
     radius: 20,
     neighbor: [
       'Stati Uniti Occidentali',
@@ -127,8 +127,8 @@ const states = [
   {
     name: 'Argentina',
     continent: 'America Meridionale',
-    x: 184,
-    y: 612,
+    x: 136,
+    y: 460,
     radius: 20,
     neighbor: [
       'Perù',
@@ -139,8 +139,8 @@ const states = [
   {
     name: 'Brasile',
     continent: 'America Meridionale',
-    x: 267,
-    y: 495,
+    x: 200,
+    y: 374,
     radius: 20,
     neighbor: [
       'Venezuela',
@@ -153,8 +153,8 @@ const states = [
   {
     name: 'Perù',
     continent: 'America Meridionale',
-    x: 185,
-    y: 540,
+    x: 140,
+    y: 405,
     radius: 20,
     neighbor: [
       'Venezuela',
@@ -166,8 +166,8 @@ const states = [
   {
     name: 'Venezuela',
     continent: 'America Meridionale',
-    x: 183,
-    y: 429,
+    x: 137,
+    y: 325,
     radius: 20,
     neighbor: [
       'America Centrale',
@@ -179,8 +179,8 @@ const states = [
   {
     name: 'Islanda',
     continent: 'Europa',
-    x: 559,
-    y: 146,
+    x: 420,
+    y: 110,
     radius: 20,
     neighbor: [
       'Groenlandia',
@@ -192,8 +192,8 @@ const states = [
   {
     name: 'Gran Bretagna',
     continent: 'Europa',
-    x: 528,
-    y: 262,
+    x: 400,
+    y: 200,
     radius: 20,
     neighbor: [
       'Islanda',
@@ -206,8 +206,8 @@ const states = [
   {
     name: 'Europa Occidentale',
     continent: 'Europa',
-    x: 490,
-    y: 335,
+    x: 370,
+    y: 250,
     radius: 20,
     neighbor: [
       'Gran Bretagna',
@@ -220,8 +220,8 @@ const states = [
   {
     name: 'Scandinavia',
     continent: 'Europa',
-    x: 615,
-    y: 200,
+    x: 460,
+    y: 153,
     radius: 20,
     neighbor: [
       'Islanda',
@@ -234,8 +234,8 @@ const states = [
   {
     name: 'Europa Settentrionale',
     continent: 'Europa',
-    x: 617,
-    y: 285,
+    x: 465,
+    y: 213,
     radius: 20,
     neighbor: [
       'Gran Bretagna',
@@ -249,8 +249,8 @@ const states = [
   {
     name: 'Europa Meridionale',
     continent: 'Europa',
-    x: 624,
-    y: 328,
+    x: 470,
+    y: 248,
     radius: 20,
     neighbor: [
       'Europa Occidentale',
@@ -265,8 +265,8 @@ const states = [
   {
     name: 'Ucraina',
     continent: 'Europa',
-    x: 718,
-    y: 266,
+    x: 540,
+    y: 203,
     radius: 20,
     neighbor: [
       'Scandinavia',
@@ -281,8 +281,8 @@ const states = [
   {
     name: 'Egitto',
     continent: 'Africa',
-    x: 658,
-    y: 445,
+    x: 495,
+    y: 336,
     radius: 20,
     neighbor: [
       'Africa del Nord',
@@ -295,8 +295,8 @@ const states = [
   {
     name: 'Congo',
     continent: 'Africa',
-    x: 610,
-    y: 543,
+    x: 461,
+    y: 406,
     radius: 20,
     neighbor: [
       'Africa del Nord',
@@ -308,8 +308,8 @@ const states = [
   {
     name: 'Madagascar',
     continent: 'Africa',
-    x: 750,
-    y: 610,
+    x: 566,
+    y: 458,
     radius: 20,
     neighbor: [
       'Africa Orientale',
@@ -320,8 +320,8 @@ const states = [
   {
     name: 'Africa del Nord',
     continent: 'Africa',
-    x: 514,
-    y: 450,
+    x: 386,
+    y: 340,
     radius: 20,
     neighbor: [
       'Brasile',
@@ -336,8 +336,8 @@ const states = [
   {
     name: 'Africa Orientale',
     continent: 'Africa',
-    x: 705,
-    y: 515,
+    x: 534,
+    y: 388,
     radius: 20,
     neighbor: [
       'Africa del Nord',
@@ -351,8 +351,8 @@ const states = [
   {
     name: 'Africa del Sud',
     continent: 'Africa',
-    x: 650,
-    y: 610,
+    x: 488,
+    y: 462,
     radius: 20,
     neighbor: [
       'Congo',
@@ -364,8 +364,8 @@ const states = [
   {
     name: 'Medio Oriente',
     continent: 'Asia',
-    x: 805,
-    y: 404,
+    x: 608,
+    y: 300,
     radius: 20,
     neighbor: [
       'Europa Meridionale',
@@ -380,8 +380,8 @@ const states = [
   {
     name: 'Urali',
     continent: 'Asia',
-    x: 800,
-    y: 225,
+    x: 605,
+    y: 172,
     radius: 20,
     neighbor: [
       'Ucraina',
@@ -394,8 +394,8 @@ const states = [
   {
     name: 'Afghanistan',
     continent: 'Asia',
-    x: 820,
-    y: 292,
+    x: 620,
+    y: 220,
     radius: 20,
     neighbor: [
       'Ucraina',
@@ -408,8 +408,8 @@ const states = [
   {
     name: 'India',
     continent: 'Asia',
-    x: 932,
-    y: 407,
+    x: 700,
+    y: 305,
     radius: 20,
     neighbor: [
       'Medio Oriente',
@@ -421,8 +421,8 @@ const states = [
   {
     name: 'Siam',
     continent: 'Asia',
-    x: 1036,
-    y: 384,
+    x: 779,
+    y: 290,
     radius: 20,
     neighbor: [
       'India',
@@ -434,8 +434,8 @@ const states = [
   {
     name: 'Cina',
     continent: 'Asia',
-    x: 1004,
-    y: 309,
+    x: 759,
+    y: 233,
     radius: 20,
     neighbor: [
       'Afghanistan',
@@ -451,8 +451,8 @@ const states = [
   {
     name: 'Mongolia',
     continent: 'Asia',
-    x: 982,
-    y: 234,
+    x: 740,
+    y: 179,
     radius: 20,
     neighbor: [
       'Siberia',
@@ -466,8 +466,8 @@ const states = [
   {
     name: 'Jacuzia',
     continent: 'Asia',
-    x: 921,
-    y: 122,
+    x: 694,
+    y: 92,
     radius: 20,
     neighbor: [
       'Siberia',
@@ -479,8 +479,8 @@ const states = [
   {
     name: 'Siberia',
     continent: 'Asia',
-    x: 850,
-    y: 197,
+    x: 643,
+    y: 147,
     radius: 20,
     neighbor: [
       'Urali',
@@ -494,8 +494,8 @@ const states = [
   {
     name: 'Čita',
     continent: 'Asia',
-    x: 928,
-    y: 205,
+    x: 699,
+    y: 152,
     radius: 20,
     neighbor: [
       'Siberia',
@@ -508,8 +508,8 @@ const states = [
   {
     name: 'Kamchatka',
     continent: 'Asia',
-    x: 1000,
-    y: 111,
+    x: 753,
+    y: 83,
     radius: 20,
     neighbor: [
       'Jacuzia',
@@ -523,8 +523,8 @@ const states = [
   {
     name: 'Giappone',
     continent: 'Asia',
-    x: 1136,
-    y: 200,
+    x: 855,
+    y: 151,
     radius: 20,
     neighbor: [
       'Kamchatka',
@@ -535,8 +535,8 @@ const states = [
   {
     name: 'Nuova Guinea',
     continent: 'Oceania',
-    x: 1196,
-    y: 506,
+    x: 901,
+    y: 382,
     radius: 20,
     neighbor: [
       'Indonesia',
@@ -548,8 +548,8 @@ const states = [
   {
     name: 'Indonesia',
     continent: 'Oceania',
-    x: 1111,
-    y: 454,
+    x: 836,
+    y: 339,
     radius: 20,
     neighbor: [
       'Siam',
@@ -561,8 +561,8 @@ const states = [
   {
     name: 'Australia Orientale',
     continent: 'Oceania',
-    x: 1165,
-    y: 624,
+    x: 875,
+    y: 467,
     radius: 20,
     neighbor: [
       'Australia Occidentale',
@@ -573,8 +573,8 @@ const states = [
   {
     name: 'Australia Occidentale',
     continent: 'Oceania',
-    x: 1068,
-    y: 588,
+    x: 803,
+    y: 443,
     radius: 20,
     neighbor: [
       'Indonesia',
