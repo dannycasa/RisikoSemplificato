@@ -69,7 +69,12 @@ Parti funzionanti:
             verifica condizione di vittoria.
             
             
-Da notare che il termine semplificato ri riferisce a due fattori fondamentali che rendono tale gioco differente rispetto al gioco classico.
-La condizione di vittoria è semplificata, infatti un giocatore vince quando possiede contemporaneamente 5 territori in più rispetto a quelli assegnati inizialialmente. Questa condizione di vittoria è uguale per tutti e vince il primo che la soddisfa, nel gioco originale si hanno delle condizioni più articolate e differenti per ogni giocatore.
-Un'altra differenza sostanziale è che è stato rimosso (per velocizzare il tutto) il limite fisico del gioco reale del 3v3 quando si attacca uno stato. Se entrambi gli stati coinvolti nell'attacco posseggono almeno 5 truppe, ad esempio, sarà possibile fare un 5v5 invece che un 3v3 seguito da un 2v2.
+Da notare che il termine semplificato si riferisce a tre fattori fondamentali che rendono tale gioco differente rispetto al gioco classico.
+
+-    La condizione di vittoria è semplificata, infatti un giocatore vince quando possiede contemporaneamente 5 territori in più rispetto al numero di stati assegnati inizialialmente. Questa condizione di vittoria è uguale per tutti e vince il primo che la soddisfa, nel gioco originale si hanno delle condizioni più articolate e differenti per ogni giocatore.
+
+
+-    Altra differenza è che è stato rimosso (per velocizzare il tutto) il limite fisico del gioco reale del 3v3 quando si attacca uno stato. Se entrambi gli stati coinvolti nell'attacco posseggono almeno 5 truppe, ad esempio, sarà possibile fare un 5v5 invece che un 3v3 seguito da un 2v2.
+
+-    Le carte simbolo sono solo di tre tipi: Cannone, Fante e Cavaliere. Rispetto al gioco originale manca la carta jolly, inoltre non è previsto il bonus di due carri armati quando vengono scambiate carte simbolo di un territorio che appartiene al giocatore.
                         
