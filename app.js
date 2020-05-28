@@ -34,6 +34,7 @@ let bonusFirstTurn = stateModule.firstTroopAssignmentList; // Lista del bonus di
 let playerTurn = -1;                              // Indica di quale giocatore è il turno.
 let firstTurn = true;                              // Indica se è il primo turno o no.
 let temporary = [];
+var timerDisconnect;
 
 // Costruttore Giocatori.
 var Player = function (number, color, nick, id) {
@@ -47,7 +48,8 @@ var Player = function (number, color, nick, id) {
     stateNumber: 0,                       // Questo è il numero degli stati (utilizzato quando si fa l'assegnamento iniziale degli stati),
     nickname: nick,                       // Questo è il nickname del giocatore,
     computationState: playerState.IDLE,   // Questo è lo stato interno del giocatore, inizialmente IDLE e deve attendere l'ok del server,
-    troop: 0                              // Questo rappresenta le truppe che il server assegna ad inizio turno al client, considerando anche i bonus.
+    troop: 0,                             // Questo rappresenta le truppe che il server assegna ad inizio turno al client, considerando anche i bonus.
+    isConnect: false                      // Questo valore indica se il giocatore è ancora connesso o no.
   }
 
   Player.list[number] = self;
@@ -58,15 +60,6 @@ Player.list = {};
 
 // Funzione che viene chiamata quando un giocatore si disconnette per rimuoverlo dalla lista dei giocatori.
 Player.onDisconnect = function (sockID) {
-  /*
-  var index = 0;
-  for (var p in Player.list) {
-    if(Player.list[p].id == sockID)
-      Player.list.splice(index,1);
-    else
-      index++;
-  }
-  */
   for (var p in Player.list)
     if (Player.list[p].id == sockID)
       delete Player.list[p];
@@ -87,24 +80,30 @@ Player.update = function(socket) {
       stateNumber: player.stateNumber,
       nickname: player.nickname,
       computationState: player.computationState,
-      troop: player.troop
+      troop: player.troop,
+      isConnect: player.isConnect
     });
   }
   return infoGiocatori;
 }
 
 // Funzione che restituisce il giocatore data un criterio.
-Player.find = function(search) {
+Player.find = function(search, type) {
   for (var i in Player.list) {
     var player = Player.list[i];
     // Posso cercare il giocatore per il numero.
-    if (typeof search == "number") {
+    if (type == "number") {
       if (player.number == search)
         return player;
     }
     // Posso cercare il giocatore per il nickname.
-    else if (typeof search == "string") {
+    else if (type == "nickname") {
       if (player.nickname == search)
+        return player;
+    }
+    // Posso cercare il giocatore per id della socket.
+    else if (type == "socket") {
+      if (player.id == search)
         return player;
     }
   }
@@ -138,7 +137,7 @@ Player.assignStatePlayers = function () {
   // Per ogni giocatore assegno il numero di stati corretti.
   for (var num = 0; num < playerNumber; num++) {
     // Recupero il player corrente e gli dico quanti stati gli do.
-    var player = Player.find(num);
+    var player = Player.find(num, "number");
 
     // Se siamo 4 giocatori e il giocatore è uno dei 'fortunati' avrà uno stato in più.
     if (player.number == player1 || player.number == player2) {
@@ -395,21 +394,17 @@ Player.countBonus = function(player) {
 // Questa è la funzione che invia i nuovi valori dei giocatori ai client in modo che sia tutto sincronizzato.
 function update() {
   var infoGiocatori = Player.update();
-  for (var i in Player.list) {
-    for(var j in SOCKET_LIST) {
-      if (Player.list[i].id == SOCKET_LIST[j].id) {
-        var socket = SOCKET_LIST[j];
-        socket.emit('update', {
-          player: infoGiocatori,
-          state: states,
-          first: firstTurn
-        });
-        break;
-      }
-    }
+  for(var j in SOCKET_LIST) {
+      var socket = SOCKET_LIST[j];
+      socket.emit('update', {
+        player: infoGiocatori,
+        state: states,
+        first: firstTurn
+      });    
   }
 }
 
+// Questa è la funzione (chiamata dopo 5 secondi dall'invocazione) che fa iniziare la partita.
 var control = function() {
   var timer = setInterval ( function() {
     // Se ci sono due giocatori assegno gli stati, l'eventuale bonus e pongo started a true.
@@ -430,6 +425,45 @@ var control = function() {
   }, 5000)  
 }
 
+// Questa è la funzione (chiamata dopo 5 secondi dall'invocazione) che fa terminare la partita.
+var onDisconnect = function() {
+  // Se entro 5 secondi dall'invocazione di onDisconnect, il giocatore non si riconnette viene eseguita la funzione.
+  timerDisconnect = setInterval ( function() {
+    // La partita è iniziata informo gli altri che un giocatore è andato offline. La partita viene interrotta.
+    started = false;     
+    playerTurn = -1;
+    firstTurn = true;
+
+    for (var p in Player.list) {
+      for (var i in SOCKET_LIST) {
+        var socket = SOCKET_LIST[i];
+        if ((socket.id == Player.list[p].id) && (playerNumber == 2) && (Player.list.length ))
+          socket.emit("victory", "left");
+        else if (socket.id == Player.list[p].id)
+          socket.emit("endOffline");
+      }
+    }
+
+    // Azzero un pò di variabili.
+    for (var s in states) {
+      states[s].owner = null;
+    }
+
+    playerNumber = 0;
+    Player.list = {};
+    control();
+
+    clearInterval(timerDisconnect);
+  
+  }, 5000);
+
+  // Se sono qui il timer potrebbe essere stato interrotto da un giocatore che si è riconnesso, quindi invio un aggiornamento.
+  once = setInterval(() => {
+    update();
+    clearInterval(once);
+  }, 2000);
+}
+
 control();
 
 // Gestione della comunicazione sulla socket.
@@ -439,17 +473,7 @@ io.on('connection', function(socket) {
   let socketID = socket.id;
   SOCKET_LIST[socket.id] = socket;
   
-  console.log('New Connection ' + socketID);
-
-  console.log("player");
-  for (var i in Player.list) {
-    console.log(Player.list[i].id);
-  }
-  console.log("socket");
-  for (var s in SOCKET_LIST) {
-    console.log(SOCKET_LIST[s].id);
-  }
-  console.log("");
+  console.log('New Connection ' + socketID + "\n");
 
   // Viene richiamata quando client, cioè un giocatore si registra alla partita.
   socket.on('newPlayer', function(data) {
@@ -462,9 +486,9 @@ io.on('connection', function(socket) {
     var nickname = data;
 
     // Se non c'è già un giocatore con il nick inserito.
-    if(!Player.find(nickname)) {
+    if(!Player.find(nickname, "nickname")) {
       // Creo una variabile player e aumento il numero dei giocatori.
-      var player = Player(playerNumber,colors[playerNumber],nickname, socketID);
+      Player(playerNumber,colors[playerNumber],nickname, socketID);
       playerNumber++;
 
       // Dico al client che è stato accettato.
@@ -479,25 +503,32 @@ io.on('connection', function(socket) {
 
   // Viene richiamata quando un client cambia pagina e quindi socket.
   socket.on('newSocket', function(data) {
+    var found = 0;
     // Inserisco nel player l'id della socket.
     for (var i in Player.list) {
       if (Player.list[i].nickname == data) {
         Player.list[i].id = socketID;
         temporary.push({id:socketID,nickname:data});
+        // Se era disconnesso lo riconnetto e termino il timer per la disconnessione (se era già fermo viene ignorato).
+        if (Player.list[i].isConnect == false) {
+          Player.list[i].isConnect = true;
+          clearInterval(timerDisconnect);
+        }
+        found = 1;
         break;
       }
-    }   
-    /*
-    if(started)
-      update(); 
-    */
+    }  
+
+    if(found == 0) {
+      Player(playerNumber,colors[playerNumber],data, socketID);
+    }
   });
 
   // Viene richiamata quando un client vuole scambiare le sue carte simbolo.
   socket.on('exchangeSymbol', function(data) {
     var combination = data.combination;
     var array = data.array;
-    var player = Player.find(data.player);
+    var player = Player.find(data.player, "nickname");
     var symbol;
 
     for (var i in symbols) {
@@ -522,7 +553,7 @@ io.on('connection', function(socket) {
 
   // Viene richiamata quando un client vuole aggiungere truppe al suo territorio.
   socket.on ('addTroop', function(data) {
-    var player = Player.find(data.player);
+    var player = Player.find(data.player, "nickname");
     var state1 = states.find(item=>item.name==data.state);
 
     // Se il player che mi ha mandato la richiesta è l'effettivo possessore dello stato e il suo stato è ASSIGN.
@@ -556,8 +587,8 @@ io.on('connection', function(socket) {
 
   // Viene richiamata quando un giocatore vuole effettuare un attacco.
   socket.on('attackPlayer', function(data) {
-    var attacker = Player.find(data.attacker);
-    var defender = Player.find(data.defender);
+    var attacker = Player.find(data.attacker, "nickname");
+    var defender = Player.find(data.defender, "nickname");
     var troops = data.troop;
     var attackerState = states.find(item=>item.name==data.state1);
     var defenderState = states.find(item=>item.name==data.state2);
@@ -623,7 +654,8 @@ io.on('connection', function(socket) {
               name: defenderState.name,
               symbol: symbol,
               value: attackerState.troops,
-              start: attackerState.name
+              start: attackerState.name,
+              victort: true
             });
 
             // Avviso il difensore che ha perso lo stato.
@@ -706,7 +738,7 @@ io.on('connection', function(socket) {
 
   // Se ricevo questo messaggio vuol dire che il client ha terminato di attaccare.
   socket.on('endAttack' , function(data) {
-    var player = Player.find(data);
+    var player = Player.find(data, "nickname");
     // Cambio il suo stato e aggiorno tutti.
     if (player.computationState == playerState.ATTACK) {
       Player.changeTurn(false, playerState.MOVE, player);
@@ -721,14 +753,11 @@ io.on('connection', function(socket) {
 
   // Viene richiamata quando un client vuole spostare truppe da un territorio all'altro.
   socket.on('moveTroops', function(data) {
-    var player = Player.find(data.player);
+    var player = Player.find(data.player, "nickname");
     var initialState = states.find(item=>item.name==data.state1);
     var endState = states.find(item=>item.name==data.state2);
     var troops = data.troop;
     var stateWon = data.won;
-
-    if (!player)
-      return;
       
     // Se il player che mi ha mandato la richiesta è il possessore di entrambi i territori ed è il turno di spostare.
     // Oppure il player è il possessore dei territori ed ha appena conquistato un territorio.
@@ -774,7 +803,7 @@ io.on('connection', function(socket) {
 
    // Se ricevo questo messaggio vuol dire che il client ha saltato lo spostamento.
    socket.on('endMove' , function(data) {
-    var player = Player.find(data);
+    var player = Player.find(data, "nickname");
     // Cambio il suo stato e aggiorno tutti.
     if (player.computationState == playerState.MOVE) {
       Player.changeTurn(true, playerState.WAITER, player);
@@ -792,41 +821,28 @@ io.on('connection', function(socket) {
     // Rimuovo il client dalla lista di socket.
     delete SOCKET_LIST[socketID];
 
-    // Se la partita è iniziata informo gli altri che un giocatore è andato offline. La partita viene interrotta.
+    // Chiamo questa funzione che dà 5 secondi al client per riconnettersi.
     if (started) {
-      started = false;     
-      playerTurn = -1;
-      firstTurn = true;
-
-      for (var p in Player.list) {
-        for (var i in SOCKET_LIST) {
-          var socket = SOCKET_LIST[i];
-          if ((socket.id == Player.list[p].id) && (playerNumber == 2) && (Player.list.length ))
-            socket.emit("victory", "left");
-          else if (socket.id == Player.list[p].id)
-            socket.emit("endOffline");
-        }
+      var player = Player.find(socketID, "socket");
+      if(player) {
+        player.isConnect = false;
+        onDisconnect(socketID);
       }
-      // Azzero un pò di variabili.
-      for (var s in states) {
-        states[s].owner = null;
-      }
-
-      playerNumber = 0;
-      Player.list = {};
-      control();
     }
 
     else {
+      // Se la partita non è iniziata rimuovo il giocatore dalla coda.
       var found = [];
       if (temporary != null) 
         found = temporary.filter(function(value, index, arr){ return value.id == socketID;});
+
       if (found.length > 0) {
+
         Player.onDisconnect(socketID);
         playerNumber--;
+;
       }
     }
-   
   });
 
   // Viene richiamata quando un client invia un messaggio in chat.
@@ -851,3 +867,17 @@ io.on('connection', function(socket) {
     socket.emit('evalAnswer',res);
   });
 });
+
+/*
+setInterval ( function() {
+  console.log("Player list:");
+  for (var p in Player.list) {
+    console.log(Player.list[p].nickname + " " + Player.list[p].id + " " + Player.list[p].isConnect);
+  }
+  console.log("Socket list:");
+  for(var s in SOCKET_LIST){
+    console.log(SOCKET_LIST[s].id);
+  }
+  console.log("\n ngiocatori " + playerNumber + " turno " + playerTurn + " started " + started);
+}, 10000) 
+*/ 

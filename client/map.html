@@ -12,35 +12,35 @@
           <td>
             <canvas id="map" width="977" height="550" style="background-image: url('/client/img/mappa.jpg'); border:1px solid #000000;"></canvas>
           </td>
-          <td>
+          <td width="400px">
             <div>
               <div id="playerNickname"> </div>
-              <div id="playerList" width="350px" height="100px" style="border:1px solid #000000;">
+              <div id="playerList" width="400px" height="100px" style="border:1px solid #000000;">
                 <div>Nome giocatori:</div>
               </div>
               <br>
-              <div id="playerTurn" widht="350px" height="100px" style="border:1px solid #000000;">
+              <div id="playerTurn" widht="400px" height="100px" style="border:1px solid #000000;">
                 <div>Turno del giocatore:</div>
               </div>
               <br>
-              <div id="playerSymbols" widht="350px" height="100px" style="border:1px solid #000000;">
+              <div id="playerSymbols" widht="400px" height="100px" style="border:1px solid #000000;">
                 <div>Carte simbolo del giocatore:</div>
               </div>
               <br>
-              <div id="playerActions" widht="350px" height="100px" style="border:1px solid #000000;">
+              <div id="playerActions" widht="400px" height="100px" style="border:1px solid #000000;">
                 <div>Possibili azioni del giocatore:</div>
               </div>
               <br>
-              <div id="playerSuggestions" widht="350px" height="100px" style="border:1px solid #000000;">
+              <div id="playerSuggestions" widht="400px" height="100px" style="border:1px solid #000000;">
                 <div>Suggerimenti al giocatore:</div>
               </div>
             </div>
             <br>
-            <div id="chat-text" style="width:350px;height:100px;overflow-y:scroll; border:1px solid #000000;">
+            <div id="chat-text" style="width:410px;height:100px;overflow-y:scroll; border:1px solid #000000;">
               <div>Connesso alla chat!</div>
             </div>
             <form id="chat-form" onsubmit="formFunction(); return false">
-              <input id="chat-input" type="text" style="width:350px"></input>
+              <input id="chat-input" type="text" style="width:405px"></input>
             </form>
           </td>
           
@@ -379,7 +379,6 @@
                     
                   }
                   else {
-                    console.log("cambio stato");
                     // Cambio lo stato di partenza dello spostamento.
                     clickedState = currentLocation;
                     clearInterval(timer);
@@ -484,29 +483,22 @@
         });
       }
       */
-      /*
+      
       if (window.performance) {
-        // Se viene premuto il tasto aggiorna
+        // Se viene premuto il tasto aggiorna.
         if (performance.navigation.type === performance.navigation.TYPE_RELOAD) {
           var exit = confirm("Vuoi davvero abbandonare la partita? Essa terminerà immediatamente.");
-          // conferma
+          // Se conferma esco dalla partita.
           if (exit) {
-            socket.emit("disconnect");
             location.replace("http://localhost:4040/");
           } 
-          else {
-            socket.emit('newSocket', nickname);
-          }
         } 
-        else if(performance.navigation.type === performance.navigation.TYPE_BACK_FORWARD) {
-          console.info( "back detected" );
-        }
       }
-      */
+      
 
       // Avviso il server che da ora deve comunicare con me tramite questa socket.
       socket.emit('newSocket', nickname);
-     
+
       // Aggiungo il messaggio ricevuto alla chat.
       socket.on('addToChat', function(data) {
         chatText.innerHTML += '<div>' + data + '</div>';
@@ -549,20 +541,24 @@
         var symbol = data.symbol;
         var max = data.value;
         var start = data.start;
+        var victory = data.victory;
 
         alert("Complimenti hai vinto tutti gli scontri e conquistato lo stato " + name + '.\nHai pescato una carta ' + symbol + ".");
 
-        var value = prompt("Quanti carri armati spostare? Inserisci un numero tra 1 e " + max + " escluso.");
-        while(value == 0 || value >= max)
-          value = prompt("Quanti carri armati spostare? Inserisci un numero tra 1 e " + max + " escluso.");
+        // Se non ho vinto, faccio spostare le truppe al mio giocatore.
+        if (!victory) {
+          var value = prompt("Quanti carri armati spostare? Inserisci un numero tra 1 e " + max + " escluso.");
+          while(value == 0 || value >= max)
+            value = prompt("Quanti carri armati spostare? Inserisci un numero tra 1 e " + max + " escluso.");
 
-        socket.emit("moveTroops", {
-          player: nickname,
-          state1: start,
-          state2: name,
-          troop: Number(value),
-          won: true
-        });
+          socket.emit("moveTroops", {
+            player: nickname,
+            state1: start,
+            state2: name,
+            troop: Number(value),
+            won: true
+          });
+        }
       });
 
       // L'attaccante non è riuscito a conquistare lo stato.
