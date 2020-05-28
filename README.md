@@ -1,5 +1,15 @@
 # RisikoSemplificato
 
+Novità 28/05/2020:
+
+-     Ridotta area di gioco per facilitare la visualizzazione nei dispositivi;
+
+
+-     Risolti alcuni problemi con la disconnessione degli utenti;
+
+-     Aggiunta la possibilità di ritornare in partita se inavvertitamente si clicca il tasto indietro o aggiorna del browser, il tempo dato a disposizione è 5 secondi. Passato questo tempo, l'atto verrà considerato come disconnessione a tutti gli effetti e la partita terminerà.
+
+
 Nella pagina principale (index) abbiamo le regole del gioco e il client ha l'opportunità di partecipare alla partita premendo il tasto inizia a giocare.
 
 Il server gestisce una partita alla volta (al momento) alla quale possono partecipare dai 2 ai 4 giocatori.
