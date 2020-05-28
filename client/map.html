@@ -468,22 +468,25 @@
         }
       });
 
-      /*
-      if(window.history && history.pushState) { 
-        addEventListener('load', function() {
-          history.pushState(null, null, null); 
-          addEventListener('popstate', function() {
-            var stayOnPage = confirm("Vuoi davvero abbandonare la partita? Essa terminerà immediatamente.");
-            // conferma
-            if (stayOnPage) {
-              socket.emit("disconnect");
-              location.replace("http://localhost:4040/");
-            } 
-          });    
-        });
-      }
-      */
       
+      if(window.history && history.pushState) { 
+        history.pushState(null, null, "http://localhost:4040/"); 
+        history.replaceState(null, null, ref);
+
+        addEventListener('popstate', function() {
+          var stayOnPage = confirm("Vuoi davvero abbandonare la partita? Essa terminerà immediatamente.");
+          // conferma
+          if (stayOnPage) {
+            history.pushState(null, null, null); 
+            location.replace("http://localhost:4040/");
+          } 
+          else {
+            history.pushState(null, null, ref); 
+          }
+        });    
+      }
+      
+  
       if (window.performance) {
         // Se viene premuto il tasto aggiorna.
         if (performance.navigation.type === performance.navigation.TYPE_RELOAD) {
